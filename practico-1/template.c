@@ -21,7 +21,7 @@ double suma_din_col (VALT * A, size_t n);
 // *(a+i) = a[i]
 void random_vector(VALT *a, size_t n) {
     for (unsigned int i = 0; i < n; i++)
-        a[i] = 1;
+        a[i] = i;
 }
 
 // main program
@@ -70,14 +70,14 @@ int main(char argc, char * argv[]){
         
     BENCH_RUN(suma_est_fil (A_est), t_suma_est_fil, t_suma_est_fil_runs );
     BENCH_RUN(suma_est_col (A_est), t_suma_est_col, t_suma_est_col_runs );
-    BENCH_RUN(suma_din_fil (A,n)  , t_suma_din_fil, t_suma_din_fil_runs );
-    BENCH_RUN(suma_din_col (A,n)  , t_suma_din_col, t_suma_din_col_runs );
+    // BENCH_RUN(suma_din_fil (A,n)  , t_suma_din_fil, t_suma_din_fil_runs );
+    // BENCH_RUN(suma_din_col (A,n)  , t_suma_din_col, t_suma_din_col_runs );
     // BENCH_RUN( suma_rand    (A,n)  , t_suma_rand   ,  t_suma_rand_runs    );
 
     printf("suma_est_fil: %.2f ms\truns:%d\n", t_suma_est_fil, t_suma_est_fil_runs );
     printf("suma_est_col: %.2f ms\truns:%d\n", t_suma_est_col, t_suma_est_col_runs );
-    printf("suma_din_fil: %.2f ms\truns:%d\n", t_suma_din_fil, t_suma_din_fil_runs );
-    printf("suma_din_col: %.2f ms\truns:%d\n", t_suma_din_col, t_suma_din_col_runs );
+    // printf("suma_din_fil: %.2f ms\truns:%d\n", t_suma_din_fil, t_suma_din_fil_runs );
+    // printf("suma_din_col: %.2f ms\truns:%d\n", t_suma_din_col, t_suma_din_col_runs );
     // printf("suma_rand: %.2f ms\truns:%d\n"    , t_suma_rand   ,t_suma_rand_runs    );
 
     // BENCH_RUN( mult_simple   (A,B,C,n)   , t_mm_simple   , t_mm_simple_runs    )
@@ -114,8 +114,10 @@ double suma_din_fil (VALT * A, size_t n) {
 
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j)
-            suma_din_fil += A[i+j];
+            suma_din_fil += A[j+i*n];
     }
+
+    printf("%f\n", suma_din_fil);
 }
 
 double suma_din_col (VALT * A, size_t n) {
@@ -125,4 +127,6 @@ double suma_din_col (VALT * A, size_t n) {
         for (int j = 0; j < n; ++j)
             suma_din_col += A[i+j*n];
     }
+
+    printf("%f\n", suma_din_col);
 }
