@@ -9,8 +9,8 @@
 #define N 512
 
 #define BENCH_RUN(f,elap,runs)                                                                              \
-        double elap=0;                                                                                      \
-        int runs=0;                                                                                         \
+        double elap=0;                                                                             \
+        int runs=0;                                                                                \
         {                                                                                                   \
         double total=0;                                                                                     \
         struct timeval t_ini,t_fin;                                                                         \
