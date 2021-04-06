@@ -8,9 +8,10 @@
 
 #define N 512
 
-#define BENCH_RUN(f,elap,runs)                                                                              \
+#define BENCH_RUN(f,elap,runs)                                                                     \
         double elap=0;                                                                             \
         int runs=0;                                                                                \
+        int gettimeofday();                                                                        \
         {                                                                                                   \
         double total=0;                                                                                     \
         struct timeval t_ini,t_fin;                                                                         \
@@ -25,3 +26,4 @@
         }                                                                                                   \
         elap = total/(double)runs;                                                                          \
         }
+        
