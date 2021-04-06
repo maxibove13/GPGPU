@@ -1,5 +1,13 @@
-Compilar de la siguiente forma:
+Compilar el código fuente:
 
 ```
-gcc -march=native -O3 -mtune=native template.c -o template
+make clean
 ```
+
+Ejecutar el programa:
+
+```
+template <n> <nb>
+```
+
+`n` es la dimensión de las matrices y `nb` es el tamaño en bytes de cada bloque matricial.
