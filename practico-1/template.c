@@ -9,9 +9,9 @@ double suma_est_col(VALT  A[N][N]);
 
 // size_t is a return type, generally used with the sizeof operator.
 double suma_din_fil (VALT * A, size_t n);
-double suma_din_fil_singleFor (VALT * A, size_t n);
+double suma_din_fil2 (VALT * A, size_t n);
 double suma_din_col (VALT * A, size_t n);
-double suma_din_rand (VALT * A, size_t n);
+void suma_din_rand (VALT * A, size_t n);
 
 // int suma_rand(VALT * A, size_t n);
 
@@ -26,9 +26,9 @@ void random_vector(VALT *a, size_t n) {
     for (unsigned int i = 0; i < n; i++)
         a[i] = (float)rand() / (float)RAND_MAX;
 }
-void array_null(int *rec,size_t n) {
-    for (int i  = 0; i < n; i++)
-        *(rec+i)=0;
+void array_zeros(int *rec, size_t n) {
+    for (unsigned int i = 0; i < n; i++)
+        *(rec+i) = 0;
 }
 // main program
 // argc (argument count) is the number of strings pointed to by argv (argument vector) (1 + number of arguments)
@@ -65,24 +65,19 @@ int main(char argc, char * argv[]){
         for (int j = 0; j < N; ++j)
             A_est[i][j]=1;
 
-    // testing 2.c
-    suma_din_rand (A,n) ;
+    BENCH_RUN(suma_est_fil (A_est), t_suma_est_fil , t_suma_est_fil_runs );
+    BENCH_RUN(suma_est_col (A_est), t_suma_est_col , t_suma_est_col_runs );
+    BENCH_RUN(suma_din_fil (A,n)  , t_sum_din_fil  , t_suma_din_fil_runs );
+    BENCH_RUN(suma_din_fil2(A,n)  , t_sum_din_fil2 , t_suma_din_fil2_runs);
+    BENCH_RUN(suma_din_col (A,n)  , t_suma_din_col , t_suma_din_col_runs );
+    BENCH_RUN(suma_din_rand(A,n)  , t_suma_din_rand, t_suma_din_rand_runs);
 
-
-
-    BENCH_RUN(suma_est_fil (A_est), t_suma_est_fil, t_suma_est_fil_runs );
-    BENCH_RUN(suma_est_col (A_est), t_suma_est_col, t_suma_est_col_runs );
-    BENCH_RUN(suma_din_fil (A,n)  , t_sum_din_fil, t_suma_din_fil_runs );
-    BENCH_RUN(suma_din_fil_singleFor (A,n)  , t_sum_din_fil_for, t_suma_din_fil_for_runs );
-    BENCH_RUN(suma_din_col (A,n)  , t_suma_din_col, t_suma_din_col_runs );
-    // BENCH_RUN( suma_rand    (A,n)  , t_suma_rand   ,  t_suma_rand_runs    );
-
-    printf("suma_est_fil: %.2f ms\truns:%d\n", t_suma_est_fil, t_suma_est_fil_runs );
-    printf("suma_est_col: %.2f ms\truns:%d\n", t_suma_est_col, t_suma_est_col_runs );
-    printf("suma_din_fil: %.2f ms\truns:%d\n", t_sum_din_fil, t_suma_din_fil_runs );
-    printf("suma_din_fil_singleFor: %.2f ms\truns:%d\n", t_sum_din_fil_for, t_suma_din_fil_for_runs );
-    printf("suma_din_col: %.2f ms\truns:%d\n", t_suma_din_col, t_suma_din_col_runs );
-    // printf("suma_rand: %.2f ms\truns:%d\n"    , t_suma_rand   ,t_suma_rand_runs    );
+    printf("suma_est_fil:  %.2f ms\truns:%d\n" , t_suma_est_fil , t_suma_est_fil_runs );
+    printf("suma_est_col:  %.2f ms\truns:%d\n" , t_suma_est_col , t_suma_est_col_runs );
+    printf("suma_din_fil:  %.2f ms\truns:%d\n" , t_sum_din_fil  , t_suma_din_fil_runs );
+    printf("suma_din_fil2: %.2f ms\truns:%d\n" , t_sum_din_fil2 , t_suma_din_fil2_runs);
+    printf("suma_din_col:  %.2f ms\truns:%d\n" , t_suma_din_col , t_suma_din_col_runs );
+    printf("suma_din_rand: %.2f ms\truns:%d\n" , t_suma_din_rand, t_suma_din_rand_runs);
 
     // BENCH_RUN( mult_simple   (A,B,C,n)   , t_mm_simple   , t_mm_simple_runs    )
     // BENCH_RUN( mult_fila     (A,B,C,n)   , t_mm_fila     , t_mm_fila_runs      )
@@ -121,7 +116,7 @@ double suma_din_fil (VALT * A, size_t n) {
             suma_din_fil += A[j+i*n];
     }
 }
-double suma_din_fil_singleFor (VALT * A, size_t n) {
+double suma_din_fil2 (VALT * A, size_t n) {
     double volatile suma_din_fil = 0.0;
 
     for (int i = 0; i < n*n; ++i) {
@@ -138,22 +133,20 @@ double suma_din_col (VALT * A, size_t n) {
     }
 }
 
-double suma_din_rand (VALT * A, size_t n) {
-    int *rec, posrand ;
+void suma_din_rand (VALT * A, size_t n) {
+    // int *rec, posrand, i ;
+    int rec[n*n], posrand;
     double volatile  suma_din_rand = 0.0;
-    array_null(rec,n*n);
-    // for (;;) {
-    //     int i=0;
-    //     posrand   = rand() * n * n / RAND_MAX;
-    //     if (*(rec+posrand)== 0)
-    //     {
-    //         suma_din_rand +=A[posrand]  ;        
-    //         *(rec+posrand)= 1           ;
-    //         i++                         ;
-    //         printf('%d', i)             ;
-    //         if (i==n*n){
-    //             break ;
-    //         }
-    //     }
-    // }
+    array_zeros(rec,n*n);
+    for (int i = 0;;) {
+        posrand = rand() * n * n / RAND_MAX;
+        if (rec[posrand] == 0) {
+            suma_din_rand += A[posrand];
+            rec[posrand] = 1;
+            i++;
+        }
+        if (i == n*n) {
+            break;
+        }
+    }
 }
