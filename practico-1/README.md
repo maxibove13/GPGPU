@@ -1,13 +1,13 @@
 Compilar el código fuente:
 
 ```
-make clean
+make
 ```
 
 Ejecutar el programa:
 
 ```
-template <n> <nb>
+./main <n> <nb>
 ```
 
 `n` es la dimensión de las matrices y `nb` es el tamaño en bytes de cada bloque matricial.
