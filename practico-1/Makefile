@@ -5,9 +5,12 @@ all: clean
 	-O3 \
 	-mtune=native \
 	\
-	template.c \
+	main.c \
+	sum.c	\
+	product.c	\
+	aux.c	\
 	\
-	-o template
+	-o main
 	
 clean:
-	rm -f template
+	rm -f main
