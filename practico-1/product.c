@@ -21,5 +21,5 @@ int mult_fila     (const VALT * __restrict__ A, const VALT * __restrict__ B, VAL
     }
 }
 
-
-    // inner loop me voy moviendo en filas de B y columnas de A. filas de C corresponden a filas de A, y columnas de C corresponden a columnas de B
+int mult_bl_simple(const VALT * __restrict__ A, const VALT * __restrict__ B, VALT * __restrict__ C, size_t n, size_t nb) {
+}

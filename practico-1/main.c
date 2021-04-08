@@ -6,7 +6,6 @@
 #include "aux.h"
 
 
-// int mult_bl_simple(const VALT * __restrict__ A, const VALT * __restrict__ B, VALT * __restrict__ C, size_t n, size_t bl_sz); 
 // int mult_bl_fila  (const VALT * __restrict__ A, const VALT * __restrict__ B, VALT * __restrict__ C, size_t n, size_t bl_sz); 
 
 // main program
@@ -57,19 +56,19 @@ int main(char argc, char * argv[]){
     BENCH_RUN(suma_din_fil2(A,n)     , t_sum_din_fil2 , t_suma_din_fil2_runs);
     BENCH_RUN(suma_din_col (A,n)     , t_suma_din_col , t_suma_din_col_runs );
     BENCH_RUN(suma_din_rand(A,n)     , t_suma_din_rand, t_suma_din_rand_runs);
-    BENCH_RUN(array_zeros(rec,n*n)   , t_array_zeros  , t_array_zeros_runs)  ;
+    // BENCH_RUN(array_zeros(rec,n*n)   , t_array_zeros  , t_array_zeros_runs)  ;
     BENCH_RUN(mult_simple(A,B,C,n)   , t_mm_simple    , t_mm_simple_runs    );
     BENCH_RUN(mult_fila (A,B,C,n)    , t_mm_fila      , t_mm_fila_runs      );
 
-    printf("suma_est_fil:  %.2f   ms\t       runs: %d\n" , t_suma_est_fil , t_suma_est_fil_runs );
-    printf("suma_est_col:  %.2f   ms\t       runs: %d\n" , t_suma_est_col , t_suma_est_col_runs );
-    printf("suma_din_fil:  %.2f   ms\t       runs: %d\n" , t_sum_din_fil  , t_suma_din_fil_runs );
-    printf("suma_din_fil2: %.2f   ms\t       runs: %d\n" , t_sum_din_fil2 , t_suma_din_fil2_runs);
-    printf("suma_din_col:  %.2f   ms\t       runs: %d\n" , t_suma_din_col , t_suma_din_col_runs );
-    printf("suma_din_rand: %.2f  ms\t       runs: %d\n" , t_suma_din_rand, t_suma_din_rand_runs);
-    printf("array_zeros:   %.2f   ms\t       runs: %d\n" , t_array_zeros  , t_array_zeros_runs  );
+    printf("suma_est_fil:  %.2f    ms\t        runs: %d\n" , t_suma_est_fil , t_suma_est_fil_runs );
+    printf("suma_est_col:  %.2f    ms\t        runs: %d\n" , t_suma_est_col , t_suma_est_col_runs );
+    printf("suma_din_fil:  %.2f    ms\t        runs: %d\n" , t_sum_din_fil  , t_suma_din_fil_runs );
+    printf("suma_din_fil2: %.2f    ms\t        runs: %d\n" , t_sum_din_fil2 , t_suma_din_fil2_runs);
+    printf("suma_din_col:  %.2f    ms\t        runs: %d\n" , t_suma_din_col , t_suma_din_col_runs );
+    printf("suma_din_rand: %.2f  ms\t        runs: %d\n" , t_suma_din_rand, t_suma_din_rand_runs);
+    // printf("array_zeros:   %.2f   ms\t       runs: %d\n" , t_array_zeros  , t_array_zeros_runs  );
     printf("mult_simple:   %.2f ms, %.2f GFlops, runs: %d\n" , t_mm_simple , ( ((double)n/t_mm_simple )*((double)n/ 1000.0)*((double)n/1000.0)) , t_mm_simple_runs  );
-    printf("mult_fila: %.2f ms, %.2f GFlops runs: %d\n"   , t_mm_fila   , ( ((double)n/t_mm_fila   )*((double)n/ 1000.0)*((double)n/1000.0)) , t_mm_fila_runs    );
+    printf("mult_fila:     %.2f  ms, %.2f GFlops, runs: %d\n"   , t_mm_fila   , ( ((double)n/t_mm_fila   )*((double)n/ 1000.0)*((double)n/1000.0)) , t_mm_fila_runs    );
 
     // BENCH_RUN( mult_bl_simple(A,B,C,n,nb), t_mm_bl_simple, t_mm_bl_simple_runs )
     // BENCH_RUN( mult_bl_fila  (A,B,C,n,nb), t_mm_bl_fila  , t_mm_bl_fila_runs   )
