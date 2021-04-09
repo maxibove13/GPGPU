@@ -41,18 +41,17 @@ void suma_din_col (VALT * A, size_t n) {
     }
 }
 
-void suma_din_rand (VALT * A, size_t n) {
+void suma_din_rand (VALT * A, size_t n, VALT * R) {
     // int *rec, posrand, i ;
-    int rec[n*n], posrand; 
+    int posrand; 
     int j = 0;
-    double volatile  suma_din_rand = 0.0;
-    array_zeros(rec,n*n);
+    double volatile suma_din_rand = 0.0;
     for (int i = 0;;) {
         // j++;
         posrand = rand() * n * n / RAND_MAX;
-        if (rec[posrand] == 0) {
+        if (R[posrand] == 0) {
             suma_din_rand += A[posrand];
-            rec[posrand] = 1;
+            R[posrand] = 1;
             i++;
         }
         if (i == n*n) {
