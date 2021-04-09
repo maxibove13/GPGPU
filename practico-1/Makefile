@@ -4,6 +4,7 @@ all: clean
 	-march=native \
 	-O3 \
 	-mtune=native \
+	-pg \
 	\
 	main.c \
 	sum.c	\

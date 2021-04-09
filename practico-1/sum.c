@@ -24,7 +24,7 @@ void suma_din_fil (VALT * A, size_t n) {
             suma_din_fil += A[j+i*n];
     }
 }
-void suma_din_fil2 (VALT * A, size_t n) {
+void suma_din_fil_simpleFor (VALT * A, size_t n) {
     double volatile suma_din_fil = 0.0;
 
     for (int i = 0; i < n*n; ++i) {
