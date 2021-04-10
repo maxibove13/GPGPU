@@ -1,4 +1,6 @@
 #include "aux.h"
+#include <stdio.h>
+
 
 void suma_est_fil(double  A[N][N]) {
     double volatile suma_fil = 0.0;
@@ -41,11 +43,15 @@ void suma_din_col (VALT * A, size_t n) {
     }
 }
 
-void suma_din_rand (VALT * A, size_t n, VALT * R) {
+void suma_din_rand (VALT * A, size_t n) {
     // int *rec, posrand, i ;
     int posrand; 
     int j = 0;
     double volatile suma_din_rand = 0.0;
+
+    VALT * R = (VALT *) aligned_alloc( 64, n*n*sizeof(VALT) );
+    array_zeros(R, n*n);
+
     for (int i = 0;;) {
         // j++;
         posrand = rand() * n * n / RAND_MAX;

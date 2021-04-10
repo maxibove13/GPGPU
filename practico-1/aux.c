@@ -10,6 +10,7 @@ void random_vector(VALT *a, size_t n) {
     }
 }
 void array_zeros(VALT *r, size_t n) {
-    for (unsigned int i = 0; i < n; i++)
+    for (unsigned int i = 0; i < n; i++) {
         r[i] = 0;
+    }
 }
