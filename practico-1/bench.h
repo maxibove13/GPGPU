@@ -1,6 +1,8 @@
 #include <math.h>
 #include <sys/timeb.h>
 #include <stdlib.h>
+#include <stdalign.h>
+#include <inttypes.h>
 
 #define VALT double
 #define STDEV_SAMPLES 50

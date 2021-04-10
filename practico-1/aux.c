@@ -1,5 +1,4 @@
 #include "bench.h"
-#include <stdio.h>
 
 // *(a+i) = a[i] WHEN a is an ARRAY
 void random_vector(VALT *a, size_t n) {

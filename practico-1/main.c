@@ -8,6 +8,8 @@
 
 // int mult_bl_fila  (const VALT * __restrict__ A, const VALT * __restrict__ B, VALT * __restrict__ C, size_t n, size_t bl_sz); 
 
+
+
 // main program
 // argc (argument count) is the number of strings pointed to by argv (argument vector) (1 + number of arguments)
 int main(char argc, char * argv[]){
@@ -22,12 +24,23 @@ int main(char argc, char * argv[]){
     // Converts argv (strings) to int
     int n = atoi(argv[1]);
     int nb = atoi(argv[2]);
+    int alignment = 64;
 
     // srand(0); // Inicializa la semilla aleatoria
 
-    VALT * A = (VALT *) aligned_alloc( 64, n*n*sizeof(VALT) );
-    VALT * B = (VALT *) aligned_alloc( 64, n*n*sizeof(VALT) );
-    VALT * C = (VALT *) aligned_alloc( 64, n*n*sizeof(VALT) );
+    VALT * A = (VALT *) aligned_alloc( alignment, n*n*sizeof(VALT) );
+    VALT * B = (VALT *) aligned_alloc( alignment, n*n*sizeof(VALT) );
+    VALT * C = (VALT *) aligned_alloc( alignment, n*n*sizeof(VALT) );
+
+    // uintptr_t is an unsigned integer type that is capable of storing a data pointer. Which typically means that it's the same size as a pointer.
+    printf("A: %p\n", A);
+    printf("uintptr_t(A): %ld\n",(uintptr_t)A);
+    printf("uintptr_t(A+1): %ld\n",(uintptr_t)(A+1));
+    printf("(uintptr_t)A %% alignment: %ld\n",(uintptr_t)A % alignment);
+
+
+
+
 
     random_vector(A, n*n);
     random_vector(B, n*n);
@@ -68,4 +81,7 @@ int main(char argc, char * argv[]){
 
 	return 0;
 }
-// 4.a)sqrt(32768/8/3)= 36 
+// 4.a)sqrt(32768/8/3) = 36
+// sqrt(32768*2/8/3) = 52
+// sqrt(262144/8/3) = 104
+// sqrt(6291456/8/3) = 512
