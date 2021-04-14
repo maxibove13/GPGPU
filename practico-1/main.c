@@ -32,12 +32,6 @@ int main(char argc, char * argv[]){
     VALT * B = (VALT *) aligned_alloc( alignment, n*n*sizeof(VALT) );
     VALT * C = (VALT *) aligned_alloc( alignment, n*n*sizeof(VALT) );
 
-    // uintptr_t is an unsigned integer type that is capable of storing a data pointer. Which typically means that it's the same size as a pointer.
-    printf("A: %p\n", A);
-    printf("uintptr_t(A): %ld\n",(uintptr_t)A);
-    printf("uintptr_t(A+1): %ld\n",(uintptr_t)(A+1));
-    printf("(uintptr_t)A %% alignment: %ld\n",(uintptr_t)A % alignment);
-
 
 
 
