@@ -8,13 +8,14 @@
 #SBATCH --gres=gpu:1
 # #SBATCH --mail-type=ALL
 # #SBATCH --mail-user=mi@correo
-#SBATCH -o salida.out
+#SBATCH -o output.out
 
 export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64
 
 source /etc/profile.d/modules.sh
 
-cd ~/mi_directorio
+cd ~/GPGPU/practico-2
 
-$1 $2
+make
+$1 $2 $3 $4
