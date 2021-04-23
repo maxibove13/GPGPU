@@ -100,6 +100,14 @@ int main(int argc, char *argv[])
 	// ejecuto el kernel
 	decrypt_kernel <<< gridSize, blockSize >>> (d_message, length, parte);
 
+	// Obtengo los posibles errores en la llamada al kernel
+	CUDA_CHK(cudaGetLastError());
+
+	// Obligo al Kernel a llegar al final de su ejecucion y hacer obtener los posibles errores
+	CUDA_CHK(cudaDeviceSynchronize());
+
+
+
 	// copio los datos nuevamente a la memoria de la CPU
 	CUDA_CHK(cudaMemcpy(h_message, d_message, size, cudaMemcpyDeviceToHost));
 
