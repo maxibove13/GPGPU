@@ -1,7 +1,7 @@
 Este programa se ejecuta en clusteruy con el siguiente comando:
 
 ```
-sbatch launch_single.sh ./secreto.txt nb parte
+sbatch launch_single.sh ./decrypt secreto.txt nb parte
 ```
 
 Donde `launch_single.sh` es el archivo de lanzamiento del gestor SLURM.

@@ -24,7 +24,7 @@ int get_text_length(const char * fname);
 
 __device__ int modulo(int a, int b){
 	int r = a % b;
-	r = (r < 0) ? r + b : r;
+	r = (r < 0) ?  r+ b : r;
 	return r;
 }
 
@@ -38,8 +38,8 @@ __global__ void decrypt_kernel(int *d_message, int length, int parte) {
 		d_message[blockIdx.x*blockDim.x + threadIdx.x] =  modulo(A_MMI_M * (d_message[blockIdx.x*blockDim.x + threadIdx.x] - B), M);
 	} else if (parte == 3) {
 			// Parte c:
-			for (int i = 0; i < length / blockDim.x + 1; ++i) {
-				d_message[threadIdx.x+blockDim.x*i] =  modulo(A_MMI_M * (d_message[threadIdx.x+blockDim.x*i] - B), M);
+			for (int i = 0; i < length / blockDim.x / gridDim.x + 1; ++i) {
+				d_message[blockIdx.x*blockDim.x + gridDim.x*blockDim.x*i + threadIdx.x] =  modulo(A_MMI_M * (d_message[blockIdx.x*blockDim.x + gridDim.x*blockDim.x*i + threadIdx.x] - B), M);
 			}
 		}
 }
@@ -75,10 +75,13 @@ int main(int argc, char *argv[])
 
 	// Parte a y c:
 	if (parte == 1 || parte == 3) {
-		nb = 1;
+		nb = 128;
 	// parte b:
 	} else if (parte == 2) {
-		nb = length / n + 1;
+		if (length % n == 0 ){
+			nb = length/n;
+		}else
+			nb = length / n + 1;
 	}
 
 	// reservar memoria para el mensaje
