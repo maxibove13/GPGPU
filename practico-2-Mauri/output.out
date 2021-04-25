@@ -1,7 +1,0 @@
-rm -f main
-nvcc	\
-\
-decrypt.cu \
-\
--o decrypt
-/var/spool/slurm/d/job1831716/slurm_script: line 21: ./secreto.txt: Permission denied
