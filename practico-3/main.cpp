@@ -36,13 +36,15 @@ int main(int argc, char** argv){
 
 	float elapsed = 0;
 
-	ajustar_brillo_cpu(img_matrix, image.width(), image.height(), img_out_matrix, 100);
+	// ajustar_brillo_cpu(img_matrix, image.width(), image.height(), img_out_matrix, 100);
+
+	ajustar_brillo_gpu(img_matrix, image.width(), image.height(), img_out_matrix, 100, 1);
 
    	image_out.save("output_brillo.ppm");
 
-	blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5);
+	// blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5);
 
-   	image_out.save("output_blur.ppm");
+   	// image_out.save("output_blur.ppm");
    	
     return 0;
 }
