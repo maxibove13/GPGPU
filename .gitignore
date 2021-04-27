@@ -1,3 +1,5 @@
 # Test programs
 test
 test.c
+
+*.out

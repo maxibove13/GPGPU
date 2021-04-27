@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
 	// Parte a y c:
 	if (parte == 1 || parte == 3) {
-		nb = 128;
+		nb = 16;
 	// parte b:
 	} else if (parte == 2) {
 		if (length % n == 0 ){
