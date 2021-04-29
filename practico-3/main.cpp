@@ -6,19 +6,25 @@ using namespace cimg_library;
 void blur_gpu(float * image, int width, int height);
 void blur_cpu(float * image_in, int width, int height, float * image_out, float * mask, int m_size);
 void ajustar_brillo_cpu(float * img_in, int width, int height, float * img_out, float coef);
-void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced=1);
+void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced);
     
 int main(int argc, char** argv){
 
 
 	const char * path;
+	int coalesced;
+	const char * no_coalesced;
+
 
 	if (argc < 3) printf("Debe ingresar el nombre del archivo y 1 o 0 dependiendo si se quiere un acceso coalesced o no.\n");
 	else
 		path = argv[argc-2];
 
-	int coalesced = atoi(argv[2]);
-
+	if (atoi(argv[2]) == 1) {
+		coalesced = 1;
+	} else if (atoi(argv[2]) == 0) {
+		coalesced = 0;
+	}
 
     //inicializamos la mascara
     float mascara[25]={1, 4, 6, 4, 1,
@@ -42,11 +48,11 @@ int main(int argc, char** argv){
 
 	ajustar_brillo_gpu(img_matrix, image.width(), image.height(), img_out_matrix, 100, coalesced);
 
-   	image_out.save("output_brillo.ppm");
+   	// image_out.save("output_brillo.ppm");
 
 	// blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5);
 
-   	// image_out.save("output_blur.ppm");
+   	image_out.save("output_blur.ppm");
    	
     return 0;
 }

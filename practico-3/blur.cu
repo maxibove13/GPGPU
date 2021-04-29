@@ -25,14 +25,11 @@ __global__ void ajustar_brillo_coalesced_kernel(float* d_img, int width, int hei
 
     int threadId, blockId;
 
-    // printf("threadIdx: (%02d, %02d, %02d) blockIdx: (%02d, %02d, %02d) blockDim: (%02d, %02d, %02d) gridDim: (%02d, %02d, %02d)\n", threadIdx.x, threadIdx.y, threadIdx.z, blockIdx.x, blockIdx.y, blockIdx.z, blockDim.x, blockDim.y, blockDim.z, gridDim.x, gridDim.y, gridDim.z);
-
-    // int index = threadIdx.y*blockDim.x + threadIdx.x + blockIdx.y*gridDim.x*blockIdx.x*blockDim.x + blockIdx.x*blockDim.x;
-
     blockId = (gridDim.x * blockIdx.y) + blockIdx.x;
     threadId = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
 
     if (blockIdx.x == 0 && blockIdx.y == 0) {
+        // printf("%d | (%d, %d) \n", threadId, threadIdx.x, threadIdx.y);
         if (threadIdx.x == 0 && threadIdx.y == 0) {
             printf("Grid & Block dimensions from GPU:\n");
             printf("grid:  (%d, %d, %d) \n", gridDim.x, gridDim.y, gridDim.z);
@@ -55,6 +52,7 @@ __global__ void ajustar_brillo_no_coalesced_kernel(float* d_img, int width, int 
     threadId = (blockId * (blockDim.y * blockDim.x)) + (threadIdx.x * blockDim.y) + threadIdx.y;
 
     if (blockIdx.x == 0 && blockIdx.y == 0) {
+        // printf("%d | (%d, %d) \n", threadId, threadIdx.x, threadIdx.y);
         if (threadIdx.x == 0 && threadIdx.y == 0) {
             printf("Grid & Block dimensions from GPU:\n");
             printf("grid:  (%d, %d, %d) \n", gridDim.x, gridDim.y, gridDim.z);
@@ -69,11 +67,11 @@ __global__ void ajustar_brillo_no_coalesced_kernel(float* d_img, int width, int 
 
 }
 
-void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced=1) {
+void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced) {
 
     float *d_img;
-    int nx = 32;
-    int ny = 32;
+    int nx = 8;
+    int ny = 8;
     int nbx = width / nx + 1;
     int nby = height / ny + 1;
     unsigned int size_img = width * height * sizeof(float);
@@ -82,28 +80,47 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
     printf("width: %d px\n", width);
     printf("height: %d px\n", height);
     printf("\n");
+
+    CLK_CUEVTS_INIT;
+    CLK_POSIX_INIT;
+    
     
     // Reservar memoria en la GPU
+ 
+    CLK_POSIX_START;
+    CLK_CUEVTS_START;
     CUDA_CHK(cudaMalloc((void**)&d_img, size_img));
+    CLK_CUEVTS_STOP;
+    CLK_POSIX_STOP;
+    CLK_CUEVTS_ELAPSED;
+    CLK_POSIX_ELAPSED;
+    float t_elap_cuda_malloc = t_elap_cuda;
+    float t_elap_get_malloc = t_elap_get;
 
     // copiar imagen a la GPU
+    CLK_POSIX_START;
+    CLK_CUEVTS_START;
     CUDA_CHK(cudaMemcpy(d_img, img_in, size_img, cudaMemcpyHostToDevice));
+    CLK_CUEVTS_STOP;
+    CLK_POSIX_STOP;
+    CLK_CUEVTS_ELAPSED;
+    CLK_POSIX_ELAPSED;
+    float t_elap_cuda_cpyHtoD = t_elap_cuda;
+    float t_elap_get_cpyHtoD = t_elap_get;
 
     // configurar grilla y lanzar kernel
     dim3 grid(nbx,nby);
     dim3 block(nx,ny);
 
-    // Check grid and block dimension from host side
-    printf("Grid & Block dimensions from CPU:\n");
-    printf("grid:  (%d, %d, %d) \n", grid.x, grid.y, grid.z);
-    printf("block: (%d, %d, %d) \n", block.x, block.y, block.z);
-    printf("\n");
 
+    CLK_POSIX_START;
+    CLK_CUEVTS_START;
     if (coalesced == 1) {
         ajustar_brillo_coalesced_kernel <<< grid, block >>> (d_img, width, height, coef);
     } else {
         ajustar_brillo_no_coalesced_kernel <<< grid, block >>> (d_img, width, height, coef);
     }
+
 
     // Obtengo los posibles errores en la llamada al kernel
 	CUDA_CHK(cudaGetLastError());
@@ -111,11 +128,41 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
 	// Obligo al Kernel a llegar al final de su ejecucion y hacer obtener los posibles errores
 	CUDA_CHK(cudaDeviceSynchronize());
 
+    CLK_CUEVTS_STOP;
+    CLK_POSIX_STOP;
+    CLK_CUEVTS_ELAPSED;
+    CLK_POSIX_ELAPSED;
+    float t_elap_cuda_kernel = t_elap_cuda;
+    float t_elap_get_kernel = t_elap_get;
+
     // transferir resultado a la memoria principal
+    CLK_POSIX_START;
+    CLK_CUEVTS_START;
     CUDA_CHK(cudaMemcpy(img_out, d_img, size_img, cudaMemcpyDeviceToHost));
+    CLK_CUEVTS_STOP;
+    CLK_POSIX_STOP;
+    CLK_CUEVTS_ELAPSED;
+    CLK_POSIX_ELAPSED;
+    float t_elap_cuda_cpyDtoH = t_elap_cuda;
+    float t_elap_get_cpyDtoH = t_elap_get;
 
     // liberar la memoria
+    CLK_POSIX_START;
+    CLK_CUEVTS_START;
     cudaFree(d_img);
+    CLK_CUEVTS_STOP;
+    CLK_POSIX_STOP;
+    CLK_CUEVTS_ELAPSED;
+    CLK_POSIX_ELAPSED;
+    float t_elap_cuda_free = t_elap_cuda;
+    float t_elap_get_free = t_elap_get;
+
+    printf("time:     | cudaEvents        | gettimeofday\n");
+    printf("malloc:   | %f ms       | %f ms\n", t_elap_cuda_malloc, t_elap_get_malloc);
+    printf("cpyHtoD:  | %f ms       | %f ms\n", t_elap_cuda_cpyHtoD, t_elap_get_cpyHtoD);
+    printf("kernel:   | %f ms       | %f ms\n", t_elap_cuda_kernel, t_elap_get_kernel);
+    printf("cpyDtoH:  | %f ms       | %f ms\n", t_elap_cuda_cpyDtoH, t_elap_get_cpyDtoH);
+    printf("free:     | %f ms       | %f ms\n", t_elap_cuda_free, t_elap_get_free);
 }
 
 
