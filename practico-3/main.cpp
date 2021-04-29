@@ -13,9 +13,11 @@ int main(int argc, char** argv){
 
 	const char * path;
 
-	if (argc < 2) printf("Debe ingresar el nombre del archivo\n");
+	if (argc < 3) printf("Debe ingresar el nombre del archivo y 1 o 0 dependiendo si se quiere un acceso coalesced o no.\n");
 	else
-		path = argv[argc-1];
+		path = argv[argc-2];
+
+	int coalesced = atoi(argv[2]);
 
 
     //inicializamos la mascara
@@ -38,7 +40,7 @@ int main(int argc, char** argv){
 
 	// ajustar_brillo_cpu(img_matrix, image.width(), image.height(), img_out_matrix, 100);
 
-	ajustar_brillo_gpu(img_matrix, image.width(), image.height(), img_out_matrix, 100, 1);
+	ajustar_brillo_gpu(img_matrix, image.width(), image.height(), img_out_matrix, 100, coalesced);
 
    	image_out.save("output_brillo.ppm");
 

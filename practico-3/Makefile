@@ -1,2 +1,20 @@
-all:
-	nvcc -arch=sm_60 -Xptxas -dlcm=cg main.cpp blur.cu -o blur -O3 -L/usr/X11R6/lib -lm -lpthread -lX11
+all: clean
+	nvcc \
+	\
+	-arch=sm_50 \
+	-Xptxas \
+	-dlcm=cg \
+	\
+	main.cpp \
+	blur.cu \
+	\
+	-o blur \
+	\
+	-O3 \
+	-L/usr/X11R6/lib \
+	-lm \
+	-lpthread \
+	-lX11
+
+clean: 
+	rm -f blur
