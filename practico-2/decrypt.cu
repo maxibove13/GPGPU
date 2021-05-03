@@ -165,7 +165,9 @@ void read_file(const char * fname, int* input)
 	int c; 
 	while ((c = getc(f)) != EOF) {
 		*(input++) = c;
+		printf("%d",c);
 	}
+	
 
 	fclose(f);
 }

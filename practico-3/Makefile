@@ -1,7 +1,7 @@
 all: clean
 	nvcc \
 	\
-	-arch=sm_50 \
+	-arch=sm_60 \
 	-Xptxas \
 	-dlcm=cg \
 	\

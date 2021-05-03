@@ -18,6 +18,22 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 using namespace std;
 
 __global__ void blur_kernel(float* d_input, float* d_output, float* d_msk, int width, int height){
+    int threadId, blockId;
+    int m_size = sizeof(*d_msk)/sizeof(d_msk[1]);
+    printf ("%d",m_size);
+    
+    blockId         = (gridDim.x * blockIdx.y) + blockIdx.x;
+    threadIdPixel   = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
+    
+    for (int i = 0; i < m_size ; i++){
+        for (int j = 0; j < m_size ; j++){
+            
+            int threadIdNei =threadIdPixel + (j- m_size/2) +(i-m_size/2)*width ;
+                        
+            if(ix >= 0 && ix < width && iy>= 0 && iy < height )
+                val_pixel = val_pixel +  img_in[iy * width +ix] * msk[i*m_size+j];
+        }
+    }
 
 }
 
@@ -70,8 +86,8 @@ __global__ void ajustar_brillo_no_coalesced_kernel(float* d_img, int width, int 
 void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced) {
 
     float *d_img;
-    int nx = 8;
-    int ny = 8;
+    int nx = 1025;
+    int ny = 1;
     int nbx = width / nx + 1;
     int nby = height / ny + 1;
     unsigned int size_img = width * height * sizeof(float);
