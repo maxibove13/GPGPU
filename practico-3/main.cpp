@@ -35,7 +35,7 @@ int main(int argc, char** argv){
 
 
 
-
+ 
 	CImg<float> image(path);
 	CImg<float> image_out(image.width(), image.height(),1,1,0);
 
