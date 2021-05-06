@@ -7,6 +7,7 @@ all: clean
 	\
 	main.cpp \
 	blur.cu \
+	bright.cu \
 	\
 	-o blur \
 	\
