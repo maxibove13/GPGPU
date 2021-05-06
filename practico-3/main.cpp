@@ -16,7 +16,10 @@ int main(int argc, char** argv){
 	const char * no_coalesced;
 
 
-	if (argc < 5) printf("Debe ingresar el nombre del archivo, 1 o 0 dependiendo si se quiere un acceso coalesced o no, el número de threads por bloque en x y en y.\n");
+	if (argc < 5) {
+		printf("Se deben ingresar 4 parámetros:\n 1) la ruta del archivo que contiene la imagen a procesar\n 2) 1 o 0 dependiendo si se quiere un acceso coalesced o no coalesced para la función ajustar_brillo_gpu\n 3) el número de threads por bloque en la dirección x\n 4) el número de threads por bloque en la dirección y\n");
+		exit(1);
+	} 
 	else
 		path = argv[argc-4];
 
@@ -49,11 +52,11 @@ int main(int argc, char** argv){
 	ajustar_brillo_gpu(img_matrix, image.width(), image.height(), img_out_matrix, 100, coalesced, threadPerBlockx, threadPerBlocky);
    	image_out.save("output_brillo.ppm");
 
-	//  blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5);
-   	// image_out.save("output_blur_CPU.ppm");
+	 blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5);
+   	image_out.save("output_blur_CPU.ppm");
 
-	//  blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5, threadPerBlockx, threadPerBlocky);
-   	// image_out.save("output_blur_GPU.ppm");
+	 blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5, threadPerBlockx, threadPerBlocky);
+   	image_out.save("output_blur_GPU.ppm");
    	
     return 0;
 }
