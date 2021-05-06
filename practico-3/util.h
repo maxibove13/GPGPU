@@ -7,7 +7,6 @@
 
 	#define CLK_CUEVTS_INIT \
 		cudaEvent_t evt_start, evt_stop; \
-		printf("Usando CUDA EVENTS para medir el tiempo\n"); \
 		float t_elap_cuda; \
 		cudaEventCreate(&evt_start); \
 		cudaEventCreate(&evt_stop) ;
@@ -24,7 +23,6 @@
 
 
 	#define CLK_POSIX_INIT \
-		printf("Usando gettimeofday para medir el tiempo\n"); \
 		struct timeval t_i, t_f; \
 		float t_elap_get
 

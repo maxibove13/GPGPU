@@ -36314,9 +36314,9 @@ namespace cimg_library_suffixed {
         std::sscanf(item," VDIM%*[^0-9]%d",out+3);
         std::sscanf(item," PIXSIZE%*[^0-9]%d",out+6);
         if (voxel_size) {
-          std::sscanf(item," VX%*[^0-9.+-]%f",voxel_size);
-          std::sscanf(item," VY%*[^0-9.+-]%f",voxel_size+1);
-          std::sscanf(item," VZ%*[^0-9.+-]%f",voxel_size+2);
+          std::sscanf(item," VX%*[^0-9.+-]%06.3f",voxel_size);
+          std::sscanf(item," VY%*[^0-9.+-]%06.3f",voxel_size+1);
+          std::sscanf(item," VZ%*[^0-9.+-]%06.3f",voxel_size+2);
         }
         if (std::sscanf(item," CPU%*[ =]%s",tmp1)) out[7]=cimg::strncasecmp(tmp1,"sun",3)?0:1;
         switch (std::sscanf(item," TYPE%*[ =]%s %s",tmp1,tmp2)) {
@@ -36881,7 +36881,7 @@ namespace cimg_library_suffixed {
       float X = 0, Y = 0, Z = 0;
       cimg_forX(*this,l) {
         do { err = std::fscanf(nfile,"%255[^\n] ",line); } while (!err || (err==1 && *line=='#'));
-        if ((err = std::sscanf(line,"%f%f%f%*[^\n] ",&X,&Y,&Z))!=3) {
+        if ((err = std::sscanf(line,"%06.3f%06.3f%06.3f%*[^\n] ",&X,&Y,&Z))!=3) {
           if (!file) cimg::fclose(nfile);
           throw CImgIOException(_cimg_instance
                                 "load_off(): Failed to read vertex %u/%u in file '%s'.",
@@ -36912,7 +36912,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0).move_to(primitives);
               CImg<tc>::vector((tc)(c0*255),(tc)(c1*255),(tc)(c2*255)).move_to(colors);
             }
@@ -36926,7 +36926,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0,i1).move_to(primitives);
               CImg<tc>::vector((tc)(c0*255),(tc)(c1*255),(tc)(c2*255)).move_to(colors);
             }
@@ -36940,7 +36940,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0,i2,i1).move_to(primitives);
               CImg<tc>::vector((tc)(c0*255),(tc)(c1*255),(tc)(c2*255)).move_to(colors);
             }
@@ -36954,7 +36954,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0,i3,i2,i1).move_to(primitives);
               CImg<tc>::vector((tc)(c0*255),(tc)(c1*255),(tc)(c2*255)).move_to(colors);
             }
@@ -36968,7 +36968,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0,i3,i2,i1).move_to(primitives);
               CImg<tf>::vector(i0,i4,i3).move_to(primitives);
               colors.insert(2,CImg<tc>::vector((tc)(c0*255),(tc)(c1*255),(tc)(c2*255)));
@@ -36984,7 +36984,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0,i3,i2,i1).move_to(primitives);
               CImg<tf>::vector(i0,i5,i4,i3).move_to(primitives);
               colors.insert(2,CImg<tc>::vector((tc)(c0*255),(tc)(c1*255),(tc)(c2*255)));
@@ -37000,7 +37000,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0,i4,i3,i1).move_to(primitives);
               CImg<tf>::vector(i0,i6,i5,i4).move_to(primitives);
               CImg<tf>::vector(i3,i2,i1).move_to(primitives);
@@ -37017,7 +37017,7 @@ namespace cimg_library_suffixed {
 
               err = std::fscanf(nfile,"%*[^\n] ");
             } else {
-              err = std::sscanf(line,"%f%f%f",&c0,&c1,&c2);
+              err = std::sscanf(line,"%06.3f%06.3f%06.3f",&c0,&c1,&c2);
               CImg<tf>::vector(i0,i3,i2,i1).move_to(primitives);
               CImg<tf>::vector(i0,i5,i4,i3).move_to(primitives);
               CImg<tf>::vector(i0,i7,i6,i5).move_to(primitives);
@@ -40370,34 +40370,34 @@ namespace cimg_library_suffixed {
       unsigned int supported_primitives = 0;
       cimglist_for(primitives,l) if (primitives[l].size()!=5) ++supported_primitives;
       std::fprintf(nfile,"OFF\n%u %u %u\n",_width,supported_primitives,3*primitives._width);
-      cimg_forX(*this,i) std::fprintf(nfile,"%f %f %f\n",(float)((*this)(i,0)),(float)((*this)(i,1)),(float)((*this)(i,2)));
+      cimg_forX(*this,i) std::fprintf(nfile,"%06.3f %06.3f %06.3f\n",(float)((*this)(i,0)),(float)((*this)(i,1)),(float)((*this)(i,2)));
       cimglist_for(primitives,l) {
         const CImg<tc>& color = l<colors.width()?colors[l]:default_color;
         const unsigned int psiz = primitives[l].size(), csiz = color.size();
         const float r = color[0]/255.0f, g = (csiz>1?color[1]:r)/255.0f, b = (csiz>2?color[2]:g)/255.0f;
         switch (psiz) {
-        case 1 : std::fprintf(nfile,"1 %u %f %f %f\n",(unsigned int)primitives(l,0),r,g,b); break;
-        case 2 : std::fprintf(nfile,"2 %u %u %f %f %f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,1),r,g,b); break;
-        case 3 : std::fprintf(nfile,"3 %u %u %u %f %f %f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,2),
+        case 1 : std::fprintf(nfile,"1 %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),r,g,b); break;
+        case 2 : std::fprintf(nfile,"2 %u %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,1),r,g,b); break;
+        case 3 : std::fprintf(nfile,"3 %u %u %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,2),
                               (unsigned int)primitives(l,1),r,g,b); break;
-        case 4 : std::fprintf(nfile,"4 %u %u %u %u %f %f %f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,3),
+        case 4 : std::fprintf(nfile,"4 %u %u %u %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,3),
                               (unsigned int)primitives(l,2),(unsigned int)primitives(l,1),r,g,b); break;
-        case 5 : std::fprintf(nfile,"2 %u %u %f %f %f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,1),r,g,b); break;
+        case 5 : std::fprintf(nfile,"2 %u %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,1),r,g,b); break;
         case 6 : {
           const unsigned int xt = (unsigned int)primitives(l,2), yt = (unsigned int)primitives(l,3);
           const float rt = color.atXY(xt,yt,0)/255.0f, gt = (csiz>1?color.atXY(xt,yt,1):r)/255.0f, bt = (csiz>2?color.atXY(xt,yt,2):g)/255.0f;
-          std::fprintf(nfile,"2 %u %u %f %f %f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,1),rt,gt,bt);
+          std::fprintf(nfile,"2 %u %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,1),rt,gt,bt);
         } break;
         case 9 : {
           const unsigned int xt = (unsigned int)primitives(l,3), yt = (unsigned int)primitives(l,4);
           const float rt = color.atXY(xt,yt,0)/255.0f, gt = (csiz>1?color.atXY(xt,yt,1):r)/255.0f, bt = (csiz>2?color.atXY(xt,yt,2):g)/255.0f;
-          std::fprintf(nfile,"3 %u %u %u %f %f %f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,2),
+          std::fprintf(nfile,"3 %u %u %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,2),
                        (unsigned int)primitives(l,1),rt,gt,bt);
         } break;
         case 12 : {
           const unsigned int xt = (unsigned int)primitives(l,4), yt = (unsigned int)primitives(l,5);
           const float rt = color.atXY(xt,yt,0)/255.0f, gt = (csiz>1?color.atXY(xt,yt,1):r)/255.0f, bt = (csiz>2?color.atXY(xt,yt,2):g)/255.0f;
-          std::fprintf(nfile,"4 %u %u %u %u %f %f %f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,3),
+          std::fprintf(nfile,"4 %u %u %u %u %06.3f %06.3f %06.3f\n",(unsigned int)primitives(l,0),(unsigned int)primitives(l,3),
                        (unsigned int)primitives(l,2),(unsigned int)primitives(l,1),rt,gt,bt);
         } break;
         }

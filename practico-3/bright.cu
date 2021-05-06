@@ -17,26 +17,13 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 using namespace std;
 
 __global__ void ajustar_brillo_coalesced_kernel(float* d_img, int width, int height, float coef) {
-
     int threadId, blockId;
 
     blockId = (gridDim.x * blockIdx.y) + blockIdx.x;
     threadId = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
 
-    if (blockIdx.x == 0 && blockIdx.y == 0) {
-        // printf("%d | (%d, %d) \n", threadId, threadIdx.x, threadIdx.y);
-        if (threadIdx.x == 0 && threadIdx.y == 0) {
-            printf("Grid & Block dimensions from GPU:\n");
-            printf("grid:  (%d, %d, %d) \n", gridDim.x, gridDim.y, gridDim.z);
-            printf("block: (%d, %d, %d) \n", blockDim.x, blockDim.y, blockDim.z);
-            printf("\n");
-        }
-    }
-        // printf("(%d, %d) | (%d, %d)\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y);
-
     if (threadId <= width * height)
         d_img[threadId] = min(255.0f,max(0.0f,d_img[threadId]+coef));
-
 }
 
 __global__ void ajustar_brillo_no_coalesced_kernel(float* d_img, int width, int height, float coef) {
@@ -46,30 +33,16 @@ __global__ void ajustar_brillo_no_coalesced_kernel(float* d_img, int width, int 
     blockId = (gridDim.y * blockIdx.x) + blockIdx.y;
     threadId = (blockId * (blockDim.y * blockDim.x)) + (threadIdx.x * blockDim.y) + threadIdx.y;
 
-    if (blockIdx.x == 0 && blockIdx.y == 0) {
-        // printf("%d | (%d, %d) \n", threadId, threadIdx.x, threadIdx.y);
-        if (threadIdx.x == 0 && threadIdx.y == 0) {
-            printf("Grid & Block dimensions from GPU:\n");
-            printf("grid:  (%d, %d, %d) \n", gridDim.x, gridDim.y, gridDim.z);
-            printf("block: (%d, %d, %d) \n", blockDim.x, blockDim.y, blockDim.z);
-            printf("\n");
-        }
-    }
-        // printf("(%d, %d) | (%d, %d)\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y);
-
     if (threadId <= width * height)
         d_img[threadId] = min(255.0f,max(0.0f,d_img[threadId]+coef));
-
 }
 
 
-void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced) {
+void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced, int threadPerBlockx, int threadPerBlocky) {
 
     float *d_img;
-    int nx = 1;
-    int ny = 1;
-    int nbx = width / nx + 1;
-    int nby = height / ny + 1;
+    int nbx = width / threadPerBlockx + 1;
+    int nby = height / threadPerBlocky + 1;
     unsigned int size_img = width * height * sizeof(float);
 
     printf("Image dimensions:\n");
@@ -77,12 +50,11 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
     printf("height: %d px\n", height);
     printf("\n");
 
+    // Inicializo variables para medir tiempos
     CLK_CUEVTS_INIT;
     CLK_POSIX_INIT;
     
-    
     // Reservar memoria en la GPU
- 
     CLK_POSIX_START;
     CLK_CUEVTS_START;
     CUDA_CHK(cudaMalloc((void**)&d_img, size_img));
@@ -106,8 +78,7 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
 
     // configurar grilla y lanzar kernel
     dim3 grid(nbx,nby);
-    dim3 block(nx,ny);
-
+    dim3 block(threadPerBlockx,threadPerBlocky);
 
     CLK_POSIX_START;
     CLK_CUEVTS_START;
@@ -116,7 +87,6 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
     } else {
         ajustar_brillo_no_coalesced_kernel <<< grid, block >>> (d_img, width, height, coef);
     }
-
 
     // Obtengo los posibles errores en la llamada al kernel
 	CUDA_CHK(cudaGetLastError());
@@ -153,12 +123,15 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
     float t_elap_cuda_free = t_elap_cuda;
     float t_elap_get_free = t_elap_get;
 
-    printf("time:     | cudaEvents        | gettimeofday\n");
-    printf("malloc:   | %f ms       | %f ms\n", t_elap_cuda_malloc, t_elap_get_malloc);
-    printf("cpyHtoD:  | %f ms       | %f ms\n", t_elap_cuda_cpyHtoD, t_elap_get_cpyHtoD);
-    printf("kernel:   | %f ms       | %f ms\n", t_elap_cuda_kernel, t_elap_get_kernel);
-    printf("cpyDtoH:  | %f ms       | %f ms\n", t_elap_cuda_cpyDtoH, t_elap_get_cpyDtoH);
-    printf("free:     | %f ms       | %f ms\n", t_elap_cuda_free, t_elap_get_free);
+    printf("Bright adjustment timing:\n");
+    printf("type:     | cudaEvents      | gettimeofday\n");
+    printf("malloc:   | %06.3f ms       | %06.3f ms\n", t_elap_cuda_malloc, t_elap_get_malloc);
+    printf("cpyHtoD:  | %06.3f ms       | %06.3f ms\n", t_elap_cuda_cpyHtoD, t_elap_get_cpyHtoD);
+    printf("kernel:   | %06.3f ms       | %06.3f ms\n", t_elap_cuda_kernel, t_elap_get_kernel);
+    printf("cpyDtoH:  | %06.3f ms       | %06.3f ms\n", t_elap_cuda_cpyDtoH, t_elap_get_cpyDtoH);
+    printf("free:     | %06.3f ms       | %06.3f ms\n", t_elap_cuda_free, t_elap_get_free);
+    printf("TOTAL:    | %06.3f ms       | %06.3f ms\n", t_elap_cuda_malloc + t_elap_cuda_cpyHtoD + t_elap_cuda_kernel + t_elap_cuda_cpyDtoH + t_elap_cuda_free + t_elap_cuda_malloc, t_elap_get_malloc + t_elap_get_cpyHtoD + t_elap_get_kernel + t_elap_get_cpyDtoH + t_elap_get_free + t_elap_get_malloc);
+    printf("\n");
 }
 
 void ajustar_brillo_cpu(float * img_in, int width, int height, float * img_out, float coef){
