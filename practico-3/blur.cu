@@ -34,7 +34,8 @@ __global__ void blur_kernel(float* d_input, int width, int height, float* d_outp
             }
         }
     }
-    d_output[threadIdPixel]= val_pixel;
+    if (threadIdPixel <= width * height )
+        d_output[threadIdPixel] = val_pixel;
 }
 
 
@@ -44,17 +45,19 @@ void blur_gpu(float * image_in, int width, int height, float * image_out,  float
     
     // Reservar memoria en la GPU
     float *d_img_in; float *d_img_out; float *d_mask;
-    int nbx = width / threadPerBlockx +1 ; //Número de blques x
-    int nby = height / threadPerBlocky +1; //Número de blques Y
+    int nbx;//Número de blques x
+    int nby;//Número de blques Y
     unsigned int size_img = width * height * sizeof(float);
     unsigned int size_msk = m_size * m_size * sizeof(int);
+
+    width % threadPerBlockx == 0 ? nbx = width / threadPerBlockx : nbx = width / threadPerBlockx + 1;
+    height % threadPerBlocky == 0 ? nby = height / threadPerBlocky : nby = height / threadPerBlocky + 1;
 
     // Inicializo variables para medir tiempos
     CLK_CUEVTS_INIT;
     CLK_POSIX_INIT;
 
 
-   
     CLK_CUEVTS_START;
     CLK_POSIX_START;
     CUDA_CHK(cudaMalloc( (void**)&d_img_in   , size_img));//Reservo memoria en el device para la imagen original
@@ -89,14 +92,14 @@ void blur_gpu(float * image_in, int width, int height, float * image_out,  float
     CLK_POSIX_START;
     CLK_CUEVTS_START;
     blur_kernel <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask,  m_size); 
-        
+    CLK_CUEVTS_STOP;
+    
     // Obtengo los posibles errores en la llamada al kernel
 	CUDA_CHK(cudaGetLastError());
 
 	// Obligo al Kernel a llegar al final de su ejecucion y hacer obtener los posibles errores
 	CUDA_CHK(cudaDeviceSynchronize());
 
-    CLK_CUEVTS_STOP;
     CLK_POSIX_STOP;
     CLK_CUEVTS_ELAPSED;
     CLK_POSIX_ELAPSED;

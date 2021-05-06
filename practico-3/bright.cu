@@ -41,9 +41,12 @@ __global__ void ajustar_brillo_no_coalesced_kernel(float* d_img, int width, int 
 void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced, int threadPerBlockx, int threadPerBlocky) {
 
     float *d_img;
-    int nbx = width / threadPerBlockx + 1;
-    int nby = height / threadPerBlocky + 1;
+    int nbx;
+    int nby;
     unsigned int size_img = width * height * sizeof(float);
+
+    width % threadPerBlockx == 0 ? nbx = width / threadPerBlockx : nbx = width / threadPerBlockx + 1;
+    height % threadPerBlocky == 0 ? nby = height / threadPerBlocky : nby = height / threadPerBlocky + 1;
 
     printf("Image dimensions:\n");
     printf("width: %d px\n", width);
@@ -87,6 +90,7 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
     } else {
         ajustar_brillo_no_coalesced_kernel <<< grid, block >>> (d_img, width, height, coef);
     }
+    CLK_CUEVTS_STOP;
 
     // Obtengo los posibles errores en la llamada al kernel
 	CUDA_CHK(cudaGetLastError());
@@ -94,7 +98,6 @@ void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, 
 	// Obligo al Kernel a llegar al final de su ejecucion y hacer obtener los posibles errores
 	CUDA_CHK(cudaDeviceSynchronize());
 
-    CLK_CUEVTS_STOP;
     CLK_POSIX_STOP;
     CLK_CUEVTS_ELAPSED;
     CLK_POSIX_ELAPSED;
