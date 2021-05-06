@@ -17,9 +17,9 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 using namespace std;
 
-__global__ void blur_kernel(float* d_input, int width, int height, float* d_output, float d_msk[],   int m_size){
+__global__ void blur_kernel(float* d_input, int width, int height, float* d_output, float * d_msk,   int m_size){
 
-    // int threadIdPixel, blockId;
+    int threadIdPixel, blockId;
     int neighbourPixel;
     float val_pixel=0;
 
@@ -31,13 +31,14 @@ __global__ void blur_kernel(float* d_input, int width, int height, float* d_outp
         }
 
     blockId         = (gridDim.x * blockIdx.y) + blockIdx.x;
-    // threadIdPixel   = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
+    threadIdPixel   = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
+    
     printf("El mask de 0 despues del threadId y blockId del kernel GPU es :%f\n",d_msk[1]);
     
     if (blockIdx.x == 0 && blockIdx.y == 0) {
         // printf("%d | (%d, %d) \n", threadId, threadIdx.x, threadIdx.y);
         if (threadIdx.x == 0 && threadIdx.y == 0) {
-            printf("El mask de 0 desde habiendo definido blockId y threadId GPU es :%f\n",d_msk[1]);
+            printf("El mask de 0 desde habiendo definido blockId y threadId GPU es :%f\n",d_msk[0]);
         }
     }
     //zona de print
@@ -54,7 +55,7 @@ __global__ void blur_kernel(float* d_input, int width, int height, float* d_outp
     // }
     for (int i = 0; i < m_size ; i++){
         for (int j = 0; j < m_size ; j++){
-            // neighbourPixel =threadIdPixel + (j- m_size/2) +(i-m_size/2)*width ;
+            neighbourPixel =threadIdPixel + (j- m_size/2) +(i-m_size/2)*width ;
             // printf("neighbourPixel:%d\n",neighbourPixel);                      
             if(neighbourPixel >= 0 && neighbourPixel < width * height ){
                 val_pixel = val_pixel +  d_input[neighbourPixel] * d_msk[i*m_size+j];
@@ -62,7 +63,7 @@ __global__ void blur_kernel(float* d_input, int width, int height, float* d_outp
                 if (blockIdx.x == 0 && blockIdx.y == 0) {
                     // printf("%d | (%d, %d) \n", threadId, threadIdx.x, threadIdx.y);
                     if (threadIdx.x == 0 && threadIdx.y == 0) {
-                        // printf("threadIdPixel_GPU:%d\n",threadIdPixel);
+                        printf("threadIdPixel_GPU:%d\n",threadIdPixel);
                         printf("neighbourPixel_GPU:%d\n",neighbourPixel);
                         printf("El mask de 0 desde kernel GPU es :%f\n",d_msk[0]);
                         printf("index_mask_pixel_GPU:%d\n",i*m_size+j);
@@ -77,7 +78,7 @@ __global__ void blur_kernel(float* d_input, int width, int height, float* d_outp
                 }
         }
     }
-    // d_output[threadIdPixel]= val_pixel;
+    d_output[threadIdPixel]= val_pixel;
 }
 
 __global__ void ajustar_brillo_coalesced_kernel(float* d_img, int width, int height, float coef) {
@@ -129,8 +130,8 @@ __global__ void ajustar_brillo_no_coalesced_kernel(float* d_img, int width, int 
 void ajustar_brillo_gpu(float * img_in, int width, int height, float * img_out, float coef, int coalesced) {
 
     float *d_img;
-    int nx = 32;
-    int ny = 32;
+    int nx = 1;
+    int ny = 1;
     int nbx = width / nx + 1;
     int nby = height / ny + 1;
     unsigned int size_img = width * height * sizeof(float);
@@ -238,12 +239,13 @@ void blur_gpu(float * image_in, int width, int height, float * image_out,  float
     unsigned int size_msk = m_size * m_size * sizeof(int);
     CUDA_CHK(cudaMalloc( (void**)&d_img_in   , size_img));//Reservo memoria en el device para la imagen original
     CUDA_CHK(cudaMalloc( (void**)&d_img_out  , size_img));//Reservo memoria en el device para la imagen de salida
-    CUDA_CHK(cudaMalloc( (void**)&d_mask      , size_msk));//Reservo memoria para la mascada
+    CUDA_CHK(cudaMalloc( (void**)&d_mask     , size_msk));//Reservo memoria para la mascada
     
+
     // copiar imagen y máscara a la GPU
     CUDA_CHK(cudaMemcpy(d_img_in  , image_in  , size_img, cudaMemcpyHostToDevice));
     CUDA_CHK(cudaMemcpy(d_img_out , image_out , size_img, cudaMemcpyHostToDevice));
-    CUDA_CHK(cudaMemcpy(d_mask    , mask     , size_msk, cudaMemcpyHostToDevice));
+    CUDA_CHK(cudaMemcpy(d_mask    , &mask[0]  , size_msk, cudaMemcpyHostToDevice));
 
     // configurar grilla y lanzar kernel
     dim3 grid(nbx,nby)  ;
