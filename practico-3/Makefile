@@ -9,7 +9,7 @@ all: clean
 	blur.cu \
 	bright.cu \
 	\
-	-o blur \
+	-o main \
 	\
 	-O3 \
 	-L/usr/X11R6/lib \

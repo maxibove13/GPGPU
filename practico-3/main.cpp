@@ -50,14 +50,14 @@ int main(int argc, char** argv){
 	// ajustar_brillo_cpu(img_matrix, image.width(), image.height(), img_out_matrix, 100);
 
 	ajustar_brillo_gpu(img_matrix, image.width(), image.height(), img_out_matrix, 100, coalesced, threadPerBlockx, threadPerBlocky);
-   	image_out.save("output_brillo.ppm");
+	image_out.save("output_brillo.ppm");
 
 	 blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5);
    	image_out.save("output_blur_CPU.ppm");
 
 	 blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5, threadPerBlockx, threadPerBlocky);
    	image_out.save("output_blur_GPU.ppm");
-   	
+
     return 0;
 }
 
