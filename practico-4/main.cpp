@@ -33,8 +33,8 @@ int main(int argc, char** argv){
     printf("height: %d px\n", image.height());
     printf("\n");
 
-	transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
-	image_out.save("output_transpose_cpu.ppm");
+	// transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
+	// image_out.save("output_transpose_cpu.ppm");
 	
 	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
 	image_out.save("output_transpose_gpu.ppm");

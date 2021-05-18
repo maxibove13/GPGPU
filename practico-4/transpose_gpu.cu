@@ -16,20 +16,26 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 using namespace std;
 
-__global__ void transpose_kernel(float* d_img, int width, int height) {
+__global__ void transpose_kernel(float* d_img_in, float* d_img_out, int width, int height) {
     
     int threadId, blockId, blockId_trans, threadId_trans;
 
     blockId = (gridDim.x * blockIdx.y) + blockIdx.x;
     threadId = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
 
+    blockId_trans = (gridDim.y * blockIdx.x) + blockIdx.y;
+    threadId_trans = (blockId_trans * (blockDim.x * blockDim.y)) + (threadIdx.x * blockDim.y) + threadIdx.y;
+    
+    // blockId_trans = blockIdx.x * gridDim.x + blockIdx.y;
+    // threadId_trans =  * (threadIdx.x * blockDim.x) + threadIdx.y;
+
     if (threadId <= width * height)
-        d_img[threadId] = d_img[threadId];
+        d_img_out[threadId_trans] = d_img_in[threadId];
 }
 
 void transpose_gpu(float * img_in, int width, int height, float * img_out, int threadPerBlockx, int threadPerBlocky) {
 
-    float *d_img;
+    float *d_img_in, *d_img_out;
     int nbx;
     int nby;
     unsigned int size_img = width * height * sizeof(float);
@@ -42,14 +48,16 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     
     // Reservar memoria en la GPU
     CLK_CUEVTS_START;
-    CUDA_CHK(cudaMalloc((void**)&d_img, size_img));
+    CUDA_CHK(cudaMalloc((void**)&d_img_in, size_img));
+    CUDA_CHK(cudaMalloc((void**)&d_img_out, size_img));
     CLK_CUEVTS_STOP;
     CLK_CUEVTS_ELAPSED;
     float t_elap_cuda_malloc = t_elap_cuda;
 
     // copiar imagen a la GPU
     CLK_CUEVTS_START;
-    CUDA_CHK(cudaMemcpy(d_img, img_in, size_img, cudaMemcpyHostToDevice));
+    CUDA_CHK(cudaMemcpy(d_img_in, img_in, size_img, cudaMemcpyHostToDevice));
+    CUDA_CHK(cudaMemcpy(d_img_out, img_out, size_img, cudaMemcpyHostToDevice));
     CLK_CUEVTS_STOP;
     CLK_CUEVTS_ELAPSED;
     float t_elap_cuda_cpyHtoD = t_elap_cuda;
@@ -59,7 +67,7 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     dim3 block(threadPerBlockx,threadPerBlocky);
 
     CLK_CUEVTS_START;
-    transpose_kernel <<< grid, block >>> (d_img, width, height);
+    transpose_kernel <<< grid, block >>> (d_img_in, d_img_out, width, height);
     CLK_CUEVTS_STOP;
 
     // Obtengo los posibles errores en la llamada al kernel
@@ -73,14 +81,15 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
 
     // transferir resultado a la memoria principal
     CLK_CUEVTS_START;
-    CUDA_CHK(cudaMemcpy(img_out, d_img, size_img, cudaMemcpyDeviceToHost));
+    CUDA_CHK(cudaMemcpy(img_out, d_img_out, size_img, cudaMemcpyDeviceToHost));
     CLK_CUEVTS_STOP;
     CLK_CUEVTS_ELAPSED;
     float t_elap_cuda_cpyDtoH = t_elap_cuda;
 
     // liberar la memoria
     CLK_CUEVTS_START;
-    cudaFree(d_img);
+    cudaFree(d_img_in);
+    cudaFree(d_img_out);
     CLK_CUEVTS_STOP;
     CLK_CUEVTS_ELAPSED;
     float t_elap_cuda_free = t_elap_cuda;
