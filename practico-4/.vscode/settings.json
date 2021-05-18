@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.inc": "fortran-modern",
+        "*.js": "javascriptreact",
+        ".F90": "fortran-modern",
+        "*.cu": "cuda",
+        "*.cuh": "cuda",
+        "util.h": "c"
+    }
+}
