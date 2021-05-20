@@ -18,13 +18,16 @@ using namespace std;
 
 __global__ void transpose_kernel(float* d_img_in, float* d_img_out, int width, int height) {
     
-    int threadId, blockId, blockId_trans, threadId_trans;
+    // int threadId, blockId, blockId_trans, threadId_trans;
+    int pixel_x, pixel_y,threadId,threadId_trans;
+    pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
+    pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    blockId = (gridDim.x * blockIdx.y) + blockIdx.x;
-    threadId = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
+    // blockId = (gridDim.x * blockIdx.y) + blockIdx.x;
+    threadId = pixel_y*width+pixel_x;
 
-    blockId_trans = (gridDim.y * blockIdx.x) + blockIdx.y;
-    threadId_trans = (blockId_trans * (blockDim.x * blockDim.y)) + (threadIdx.x * blockDim.y) + threadIdx.y;
+    // blockId_trans = (gridDim.y * blockIdx.x) + blockIdx.y;
+    threadId_trans = (pixel_x*height+pixel_y);
     
     // blockId_trans = blockIdx.x * gridDim.x + blockIdx.y;
     // threadId_trans =  * (threadIdx.x * blockDim.x) + threadIdx.y;
