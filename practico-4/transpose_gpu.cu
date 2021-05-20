@@ -16,24 +16,47 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 using namespace std;
 
-__global__ void transpose_kernel(float* d_img_in, float* d_img_out, int width, int height) {
+__global__ void transpose_kernel_gobalMem(float* d_img_in, float* d_img_out, int width, int height) {
     
-    // int threadId, blockId, blockId_trans, threadId_trans;
-    int pixel_x, pixel_y,threadId,threadId_trans;
-    pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
-    pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
+    int pixel_x, pixel_y,threadId_original,threadId_trans; //Declaro variables
+    pixel_x = blockIdx.x * blockDim.x + threadIdx.x; //Indices imgx análogo a el CPU transpose
+    pixel_y = blockIdx.y * blockDim.y + threadIdx.y; //Indices imgy análogo a el CPU transpose
 
-    // blockId = (gridDim.x * blockIdx.y) + blockIdx.x;
-    threadId = pixel_y*width+pixel_x;
+    threadId_original = pixel_y*width+pixel_x; //Indice de acceso a la imagen original
 
-    // blockId_trans = (gridDim.y * blockIdx.x) + blockIdx.y;
-    threadId_trans = (pixel_x*height+pixel_y);
+    threadId_trans = (pixel_x*height+pixel_y);//Indice de acceso a la transpuesta
     
-    // blockId_trans = blockIdx.x * gridDim.x + blockIdx.y;
-    // threadId_trans =  * (threadIdx.x * blockDim.x) + threadIdx.y;
+    if (threadId_original <= width * height)
+        d_img_out[threadId_trans] = d_img_in[threadId_original];
+}
 
-    if (threadId <= width * height)
-        d_img_out[threadId_trans] = d_img_in[threadId];
+__global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, int width, int height) {
+    __shared__ float tile[blockDim.x * blockDim.y]; //Defino el arrray tile en shared memory  
+    
+    //PASO 1: Leo variables en la imagen original y copio al tile de forma coalseced
+    int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_row;
+    
+    original_pixel_x = blockIdx.x  * blockDim.x + threadIdx.x;
+    original_pixel_y = blockIdx.y  * blockDim.y + threadIdx.y;
+    
+    threadId_original = original_pixel_y * width + original_pixel_x ;//Indice de acceso a la imagen original
+    threadId_tile_row = threadIdx.y * blockDim.x + threadIdx.x      ;//El block dim.x es el ancho del tile
+    
+    tile[threadId_tile_row]= d_img_in[threadId_original];
+    __syncthreads(); // Me aseguro que se hayan copiado todos los datos al tile sino algunos threades impertientens se pueden encontrar con datos nulos
+    
+    //PASO 2: Accedo por columnas al tile y calculo ese índice. 
+    int threadId_tile_col;
+    threadId_tile_col = threadIdx.x * blockDim.y + threadIdx.y;//El block dim.y es el height del tile
+
+    // PASO 3: Pego en las columnas de la imágen de salida
+    int transpose_pixel_x,transpose_pixel_y,threadId_trans;
+    transpose_pixel_x = blockIdx.y * blockDim.y + threadIdx.x ;//Se accede por columnas
+    transpose_pixel_y = blockIdx.x * blockDim.x + threadIdx.y ;
+    threadId_trans    = transpose_pixel_x + transpose_pixel_y * height ;
+    
+    if (threadId_trans <= width * height)
+        d_img_out[threadId_trans] = tile[threadId_tile_col];
 }
 
 void transpose_gpu(float * img_in, int width, int height, float * img_out, int threadPerBlockx, int threadPerBlocky) {
@@ -69,8 +92,10 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     dim3 grid(nbx,nby);
     dim3 block(threadPerBlockx,threadPerBlocky);
 
+
+    // Ejecuta Kernel con globalMem
     CLK_CUEVTS_START;
-    transpose_kernel <<< grid, block >>> (d_img_in, d_img_out, width, height);
+    transpose_kernel_gobalMem <<< grid, block >>> (d_img_in, d_img_out, width, height);
     CLK_CUEVTS_STOP;
 
     // Obtengo los posibles errores en la llamada al kernel
@@ -80,7 +105,20 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
 	CUDA_CHK(cudaDeviceSynchronize());
 
     CLK_CUEVTS_ELAPSED;
-    float t_elap_cuda_kernel = t_elap_cuda;
+    float t_elap_cuda_kernel_globalMem = t_elap_cuda;
+
+    CLK_CUEVTS_START;
+    transpose_kernel_sharedMem <<< grid, block >>> (d_img_in, d_img_out, width, height);
+    CLK_CUEVTS_STOP;
+
+    // Obtengo los posibles errores en la llamada al kernel
+	CUDA_CHK(cudaGetLastError());
+
+	// Obligo al Kernel a llegar al final de su ejecucion y hacer obtener los posibles errores
+	CUDA_CHK(cudaDeviceSynchronize());
+
+    CLK_CUEVTS_ELAPSED;
+    float t_elap_cuda_kernel_sharedMem = t_elap_cuda;
 
     // transferir resultado a la memoria principal
     CLK_CUEVTS_START;
@@ -97,13 +135,15 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     CLK_CUEVTS_ELAPSED;
     float t_elap_cuda_free = t_elap_cuda;
 
-    printf("Bright adjustment timing:\n");
-    printf("type:     | cudaEvents\n");
-    printf("malloc:   | %06.3f ms\n", t_elap_cuda_malloc);
-    printf("cpyHtoD:  | %06.3f ms\n", t_elap_cuda_cpyHtoD);
-    printf("kernel:   | %06.3f ms\n", t_elap_cuda_kernel);
-    printf("cpyDtoH:  | %06.3f ms\n", t_elap_cuda_cpyDtoH);
-    printf("free:     | %06.3f ms\n", t_elap_cuda_free);
-    printf("TOTAL:    | %06.3f ms\n", t_elap_cuda_malloc + t_elap_cuda_cpyHtoD + t_elap_cuda_kernel + t_elap_cuda_cpyDtoH + t_elap_cuda_free + t_elap_cuda_malloc);
+    printf("Transpose adjustment timing:\n");
+    printf("type:               | cudaEvents\n");
+    printf("malloc:             | %06.3f ms\n", t_elap_cuda_malloc);
+    printf("cpyHtoD:            | %06.3f ms\n", t_elap_cuda_cpyHtoD);
+    printf("kernel globalMem:   | %06.3f ms\n", t_elap_cuda_kernel_globalMem);
+    printf("kernel sharedMem:   | %06.3f ms\n", t_elap_cuda_kernel_globalMem);
+    printf("cpyDtoH:            | %06.3f ms\n", t_elap_cuda_cpyDtoH);
+    printf("free:               | %06.3f ms\n", t_elap_cuda_free);
+    printf("TOTAL globalMem:    | %06.3f ms\n", t_elap_cuda_malloc + t_elap_cuda_cpyHtoD + t_elap_cuda_kernel_globalMem + t_elap_cuda_cpyDtoH + t_elap_cuda_free + t_elap_cuda_malloc);
+    printf("TOTAL sharedMem:    | %06.3f ms\n", t_elap_cuda_malloc + t_elap_cuda_cpyHtoD + t_elap_cuda_kernel_sharedMem + t_elap_cuda_cpyDtoH + t_elap_cuda_free + t_elap_cuda_malloc);
     printf("\n");
 }
