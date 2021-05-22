@@ -19,7 +19,6 @@ int main(int argc, char** argv){
 
 	int threadPerBlockx = atoi(argv[2]);
 	int threadPerBlocky = atoi(argv[3]);
-
 	CImg<float> image(path);
 	CImg<float> image_out(image.height(), image.width(),1,1,0);
 
