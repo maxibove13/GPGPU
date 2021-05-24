@@ -3,7 +3,7 @@
 #include "cuda.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-
+#define THREAD_PER_BLOCK 32
 #define CUDA_CHK(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -30,12 +30,12 @@ __global__ void transpose_kernel_gobalMem(float* d_img_in, float* d_img_out, int
         d_img_out[threadId_trans] = d_img_in[threadId_original];
 }
 
-__global__ void transpose_kernel_sharedMem_b(float* d_img_in, float* d_img_out, int width, int height,int threadPerBlock) {
+__global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, int width, int height) {
     //printf("%d\n", threadPerBlock); /Hay un error cuando declaro el array tile em localMem que debe ser del tipo const!
     // A: SE DEFINEN LAS CONST AFUERA DEL KENREL CON  #DEFINTE
-    __shared__ float tile[threadPerBlock]; //Defino el arrray tile en shared memory  
+    __shared__ float tile[THREAD_PER_BLOCK*THREAD_PER_BLOCK]; //Defino el arrray tile en shared memory  
     
-    //PASO 1: Leo variables en la imagen original y copio al tile de forma coalseced
+    //PASO 1: Leo variables en la imagen original por filas y copio al tile de forma coalseced por filas
     int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_row;
     
     original_pixel_x = blockIdx.x  * blockDim.x + threadIdx.x;
@@ -45,13 +45,14 @@ __global__ void transpose_kernel_sharedMem_b(float* d_img_in, float* d_img_out, 
     threadId_tile_row = threadIdx.y * blockDim.x + threadIdx.x      ;//El block dim.x es el ancho del tile
     
     tile[threadId_tile_row]= d_img_in[threadId_original];
-    __syncthreads(); // Me aseguro que se hayan copiado todos los datos al tile sino algunos threades impertientens se pueden encontrar con datos nulos //    Garantizado los datos en memoria compartida
+    __syncthreads(); // Me aseguro que se hayan copiado todos los datos al tile sino algunos threades impertientens se pueden encontrar con datos nulos
+     //    Garantizado los datos en memoria compartida
 
     //PASO 2: Accedo por columnas al tile y calculo ese índice. 
     int threadId_tile_col;
     threadId_tile_col = threadIdx.x * blockDim.y + threadIdx.y;//El block dim.y es el height del tile
 
-    // PASO 3: Pego en las filas de la imágen de salida de forma coalesced
+    // PASO 3: Pego en las filas de la imagen de salida de forma coalesced
     int transpose_pixel_x,transpose_pixel_y,threadId_trans;
     transpose_pixel_x = blockIdx.y * blockDim.y + threadIdx.x ;//Se accede por columnas
     transpose_pixel_y = blockIdx.x * blockDim.x + threadIdx.y ;
@@ -102,8 +103,7 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
 
     width % threadPerBlockx == 0 ? nbx = width / threadPerBlockx : nbx = width / threadPerBlockx + 1;
     height % threadPerBlocky == 0 ? nby = height / threadPerBlocky : nby = height / threadPerBlocky + 1;
-    int threadPerBlock = threadPerBlockx*threadPerBlocky;
-    #define threadPerBlock threadPerBlock
+
     // Inicializo variables para medir tiempos
     CLK_CUEVTS_INIT;
     
@@ -141,10 +141,9 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
 
     CLK_CUEVTS_ELAPSED;
     float t_elap_cuda_kernel_globalMem = t_elap_cuda;
-    printf("%d\n", threadPerBlock);
 
     CLK_CUEVTS_START;
-    // transpose_kernel_sharedMem_b <<< grid, block >>> (d_img_in, d_img_out, width, height,threadPerBlock);
+    transpose_kernel_sharedMem <<< grid, block >>> (d_img_in, d_img_out, width, height);
     CLK_CUEVTS_STOP;
 
     // Obtengo los posibles errores en la llamada al kernel
