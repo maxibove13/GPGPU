@@ -31,8 +31,7 @@ __global__ void transpose_kernel_gobalMem(float* d_img_in, float* d_img_out, int
 }
 
 __global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, int width, int height) {
-    //printf("%d\n", threadPerBlock); /Hay un error cuando declaro el array tile em localMem que debe ser del tipo const!
-    // A: SE DEFINEN LAS CONST AFUERA DEL KENREL CON  #DEFINTE
+
     __shared__ float tile[THREAD_PER_BLOCK*THREAD_PER_BLOCK]; //Defino el arrray tile en shared memory  
     
     //PASO 1: Leo variables en la imagen original por filas y copio al tile de forma coalseced por filas

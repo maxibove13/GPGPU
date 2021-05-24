@@ -3,9 +3,9 @@
 
 using namespace cimg_library;
 
-void transpose_cpu(float * image_in, int width, int height, float * image_out);
-void transpose_gpu(float * image_in, int width, int height, float * image_out, int threadPerBlockx, int threadPerBlocky);
-    
+void transpose_cpu	(float * image_in, int width, int height, float * image_out);
+void transpose_gpu	(float * image_in, int width, int height, float * image_out, int threadPerBlockx, int threadPerBlocky);
+void blur_gpu(float * image_in, int width, int height, float * image_out, float * mask, int m_size, int threadPerBlockx, int threadPerBlocky);
 int main(int argc, char** argv){
 
 	const char * path;
@@ -32,11 +32,21 @@ int main(int argc, char** argv){
     printf("height: %d px\n", image.height());
     printf("\n");
 
+	//Defino la mascara
+    float mascara[25]={1, 4, 6, 4, 1,
+						4,16,24,16, 4,
+						6,24,36,24, 6,
+						4,16,24,16, 4,
+						1, 4, 6, 4, 1};
+
 	// transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
 	// image_out.save("output_transpose_cpu.ppm");
 	
 	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
 	image_out.save("output_transpose_gpu.ppm");
+
+	blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5, threadPerBlockx, threadPerBlocky);
+   	image_out.save("output_blur_GPU.ppm");
 
     return 0;
 }
