@@ -45,8 +45,8 @@ int main(int argc, char** argv){
 	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
 	image_out.save("output_transpose_gpu.ppm");
 
-	blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5, threadPerBlockx, threadPerBlocky);
-   	image_out.save("output_blur_GPU.ppm");
+	// blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5, threadPerBlockx, threadPerBlocky);
+   	// image_out.save("output_blur_GPU.ppm");
 
     return 0;
 }

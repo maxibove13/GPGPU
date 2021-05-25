@@ -32,7 +32,7 @@ __global__ void transpose_kernel_gobalMem(float* d_img_in, float* d_img_out, int
 
 __global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, int width, int height) {
 
-    __shared__ float tile[THREAD_PER_BLOCK*THREAD_PER_BLOCK]; //Defino el arrray tile en shared memory  
+    extern __shared__ float tile[]; //Defino el arrray tile en shared memory  
     
     //PASO 1: Leo variables en la imagen original por filas y copio al tile de forma coalseced por filas
     int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_row;
@@ -88,7 +88,6 @@ __global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, in
 //      int out_pixel_x = threadIdx.x + blockIdx.y*blockDim.y;
 //      int out_pixel_y = threadIdx.y + blockIdx.x*blockDim.x;
 //     *(d_output + out_pixel_x + out_pixel_y*height ) = tile[bl_pixel_y];
-  
 //   }
 
 
@@ -98,6 +97,7 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     float *d_img_in, *d_img_out;
     int nbx;
     int nby;
+    unsigned int tile_size;
     unsigned int size_img = width * height * sizeof(float);
 
     width % threadPerBlockx == 0 ? nbx = width / threadPerBlockx : nbx = width / threadPerBlockx + 1;
@@ -141,8 +141,11 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     CLK_CUEVTS_ELAPSED;
     float t_elap_cuda_kernel_globalMem = t_elap_cuda;
 
+    // Define the number of bytes to allocate to shared mem
+    tile_size = threadPerBlockx * threadPerBlocky * sizeof(float);
+
     CLK_CUEVTS_START;
-    transpose_kernel_sharedMem <<< grid, block >>> (d_img_in, d_img_out, width, height);
+    transpose_kernel_sharedMem <<< grid, block, tile_size >>> (d_img_in, d_img_out, width, height);
     CLK_CUEVTS_STOP;
 
     // Obtengo los posibles errores en la llamada al kernel
