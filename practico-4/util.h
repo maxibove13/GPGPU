@@ -9,7 +9,7 @@
 		cudaEvent_t evt_start, evt_stop; \
 		float t_elap_cuda; \
 		cudaEventCreate(&evt_start); \
-		cudaEventCreate(&evt_stop) ;
+		cudaEventCreate(&evt_stop);
 
 	#define CLK_CUEVTS_START \
         cudaEventRecord(evt_start, 0);
@@ -24,17 +24,17 @@
 
 	#define CLK_POSIX_INIT \
 		struct timeval t_i, t_f; \
-		float t_elap_get
+		float t_elap_get;
 
 	#define CLK_POSIX_START \
-		gettimeofday(&t_i,NULL)
+		gettimeofday(&t_i,NULL);
 
 	#define CLK_POSIX_STOP \
-		gettimeofday(&t_f,NULL) 
+		gettimeofday(&t_f,NULL);
 
 	#define CLK_POSIX_ELAPSED \
 		t_elap_get = ((double) t_f.tv_sec * 1000.0 + (double) t_f.tv_usec / 1000.0 - \
-			 	 ((double) t_i.tv_sec * 1000.0 + (double) t_i.tv_usec / 1000.0))
+			 	 ((double) t_i.tv_sec * 1000.0 + (double) t_i.tv_usec / 1000.0));
 
 
 

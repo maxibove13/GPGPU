@@ -41,16 +41,16 @@ int main(int argc, char** argv) {
 						4,16,24,16, 4,
 						1, 4, 6, 4, 1};
 
-	// transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
-	// image_out.save("output_transpose_cpu.ppm");
+	transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
+	//image_out.save("output_transpose_cpu.ppm");
 	
-	// transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
-	// image_out.save("output_transpose_gpu.ppm");
+	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
+	image_out.save("output_transpose_gpu.ppm");
 
-	n_mask =  sqrt( sizeof(mascara) / sizeof(mascara[0]));
+	// n_mask =  sqrt( sizeof(mascara) / sizeof(mascara[0]));
 
-	blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, n_mask, threadPerBlockx, threadPerBlocky);
-   	image_out.save("output_blur_GPU.ppm");
+	// blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, n_mask, threadPerBlockx, threadPerBlocky);
+   	// image_out.save("output_blur_GPU.ppm");
 
 	printf("%d", sqrt( sizeof(mascara) / sizeof(mascara[0])));
 
