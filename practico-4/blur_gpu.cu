@@ -21,14 +21,14 @@ __global__ void blur_kernel(float* d_input, int width, int height, float* d_outp
     __shared__ float tile[THREAD_PER_BLOCK*THREAD_PER_BLOCK]; //Defino el arrray tile en shared memory  
     
     //PASO 1: Leo variables en la imagen original por filas y copio al tile de forma coalseced por filas
-    int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_row;
+    int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_row, threadIdPixel;
     
     original_pixel_x = blockIdx.x  * blockDim.x + threadIdx.x;
     original_pixel_y = blockIdx.y  * blockDim.y + threadIdx.y;
     
     threadId_original = original_pixel_y * width + original_pixel_x ;//Indice de acceso a la imagen original
     threadId_tile_row = threadIdx.y * blockDim.x + threadIdx.x      ;//El block dim.x es el ancho del tile
-    tile[threadId_tile_row]= d_img_in[threadId_original];
+    tile[threadId_tile_row]= d_input[threadId_original];
     __syncthreads();
         //Inicializo el valor ponderado del pixel
         float val_pixel = 0;
@@ -37,14 +37,14 @@ __global__ void blur_kernel(float* d_input, int width, int height, float* d_outp
           for (int j = 0; j < m_size ; j++){
             int mask_pixel_x = original_pixel_x + i - m_size/2;
             int mask_pixel_y = original_pixel_y + j - m_size/2;
-            int threadId_mask= mask_pixel_x + mask_pixel_y*blockDim.x
+            int threadId_mask= mask_pixel_x + mask_pixel_y*blockDim.x;
             
 
             int tile_pixel_x = threadIdx.x + i - m_size/2;
             int tile_pixel_y = threadIdx.y + j - m_size/2;
-            int threadId_tile= tile_pixel_x + tile_pixel_y*blockDim.x
+            int threadId_tile= tile_pixel_x + tile_pixel_y*blockDim.x;
 
-            if(mask_pixel_x >= 0 && mask_pixel_x < width && mask_pixel_y>= 0 && mask_pixel_y < height ){ // Chequeo no excederme de los limites de la imagen original
+            if(mask_pixel_x >= 0 && mask_pixel_x < width && mask_pixel_y>= 0 && mask_pixel_y < height ) { // Chequeo no excederme de los limites de la imagen original
               if(tile_pixel_x >= 0 && tile_pixel_x < blockDim.x && tile_pixel_x>= 0 && tile_pixel_x < blockDim.y ){   // Estoy dentro del bloque compartido??
                 val_pixel = val_pixel +  tile[threadId_tile] * d_msk[i*m_size+j];
               }else{ // Voy a buscar a memoria a global los datos faltantes

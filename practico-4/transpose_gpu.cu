@@ -63,33 +63,33 @@ __global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, in
 
 __global__ void transpose_kernel_sharedMem_noBankConflicts(float* d_img_in, float* d_img_out, int width, int height) {
 
-    extern __shared__ float tile[]; //Defino el arrray tile en shared memory  
+    extern __shared__ float tile_b[31][34]; //Defino el arrray tile_b en shared memory  
 
-    //PASO 1: Leo variables en la imagen original por filas y copio al tile de forma coalseced por filas
-    int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_row;
+    //PASO 1: Leo variables en la imagen original por filas y copio al tile_b de forma coalseced por filas
+    int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_b_row;
     
     original_pixel_x = blockIdx.x  * blockDim.x + threadIdx.x;
     original_pixel_y = blockIdx.y  * blockDim.y + threadIdx.y;
     
     threadId_original = original_pixel_y * width + original_pixel_x ;//Indice de acceso a la imagen original
-    threadId_tile_row = threadIdx.y * blockDim.x + threadIdx.x      ;//El block dim.x es el ancho del tile
+    threadId_tile_b_row = threadIdx.y * blockDim.x + threadIdx.x      ;//El block dim.x es el ancho del tile_b
     
-    tile[threadId_tile_row]= d_img_in[threadId_original];
-    __syncthreads(); // Me aseguro que se hayan copiado todos los datos al tile sino algunos threades impertientens se pueden encontrar con datos nulos
+    tile_b[threadIdx.x][threadIdx.y]= d_img_in[threadId_original];
+    __syncthreads(); // Me aseguro que se hayan copiado todos los datos al tile_b sino algunos threades impertientens se pueden encontrar con datos nulos
      //    Garantizado los datos en memoria compartida
 
-    //PASO 2: Accedo por columnas al tile y calculo ese índice. 
-    int threadId_tile_col;
-    threadId_tile_col = threadIdx.x * blockDim.y + threadIdx.y;//El block dim.y es el height del tile
+    //PASO 2: Accedo por columnas al tile_b y calculo ese índice. 
+    int threadId_tile_b_col;
+    threadId_tile_b_col = threadIdx.x * blockDim.y + threadIdx.y;//El block dim.y es el height del tile_b
 
     // PASO 3: Pego en las filas de la imagen de salida de forma coalesced
     int transpose_pixel_x,transpose_pixel_y,threadId_trans;
-    transpose_pixel_x = blockIdx.y * blockDim.y + threadIdx.y ;//Se accede por columnas
-    transpose_pixel_y = blockIdx.x * blockDim.x + threadIdx.x ;
+    transpose_pixel_x = blockIdx.y * blockDim.y + threadIdx.x ;//Se accede por columnas
+    transpose_pixel_y = blockIdx.x * blockDim.x + threadIdx.y ;
     threadId_trans    = transpose_pixel_x + transpose_pixel_y * height ;
     
     if (threadId_trans <= width * height)
-        d_img_out[threadId_trans] = tile[threadId_tile_row];
+        d_img_out[threadId_trans] = tile_b[threadIdx.y][threadIdx.x];
 }
 
 
@@ -130,7 +130,7 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     float *d_img_in, *d_img_out;
     int nbx;
     int nby;
-    unsigned int size_img, tile_size;
+    unsigned int size_img, tile_size, tile_size_b;
 
     // Determino la cantidad de bloques a utilizar en función del tamaño de la imagen en pixels y del número de bloques pasado como parámetro por el usuario.
     width % threadPerBlockx == 0 ? nbx = width / threadPerBlockx : nbx = width / threadPerBlockx + 1;
@@ -162,6 +162,7 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
 
     // Defino el tamaño de la memoria compartida en bytes:
     tile_size = threadPerBlockx * threadPerBlocky * sizeof(float);
+    tile_size_b = (threadPerBlockx - 1) * (threadPerBlocky + 2) * sizeof(float);
 
     // Ejecuto kernel utilizando shared mem, especificando además del grid and bloc size el shared mem size:
     transpose_kernel_sharedMem <<< grid, block, tile_size >>> (d_img_in, d_img_out, width, height);
@@ -173,7 +174,7 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
 	CUDA_CHK(cudaDeviceSynchronize());
 
     // Ejecuto kernel utilizando shared mem, especificando además del grid and bloc size el shared mem size, y evitando los conflictos de bancos:
-    transpose_kernel_sharedMem_noBankConflicts <<< grid, block, tile_size >>> (d_img_in, d_img_out, width, height);
+    transpose_kernel_sharedMem_noBankConflicts <<< grid, block >>> (d_img_in, d_img_out, width, height);
 
     // Obtengo los posibles errores en la llamada al kernel
 	CUDA_CHK(cudaGetLastError());

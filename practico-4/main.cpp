@@ -5,17 +5,19 @@ using namespace cimg_library;
 
 void transpose_cpu	(float * image_in, int width, int height, float * image_out);
 void transpose_gpu	(float * image_in, int width, int height, float * image_out, int threadPerBlockx, int threadPerBlocky);
-// void blur_gpu(float * image_in, int width, int height, float * image_out, float * mask, int m_size, int threadPerBlockx, int threadPerBlocky);
-int main(int argc, char** argv){
+void blur_gpu (float * image_in, int width, int height, float * image_out, float * mask, int m_size, int threadPerBlockx, int threadPerBlocky);
+
+int main(int argc, char** argv) {
 
 	const char * path;
+	int n_mask;
 
 	if (argc < 4) {
 		printf("Se deben ingresar 3 parámetros:\n 1) la ruta del archivo que contiene la imagen a procesar\n 2) el número de threads por bloque en la dirección x\n 3) el número de threads por bloque en la dirección y\n");
 		exit(1);
 	} 
 	else
-		path = argv[argc-4];
+		path = argv[argc-3];
 
 	int threadPerBlockx = atoi(argv[2]);
 	int threadPerBlocky = atoi(argv[3]);
@@ -42,11 +44,15 @@ int main(int argc, char** argv){
 	// transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
 	// image_out.save("output_transpose_cpu.ppm");
 	
-	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
-	image_out.save("output_transpose_gpu.ppm");
+	// transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
+	// image_out.save("output_transpose_gpu.ppm");
 
-	// blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, 5, threadPerBlockx, threadPerBlocky);
-   	// image_out.save("output_blur_GPU.ppm");
+	n_mask =  sqrt( sizeof(mascara) / sizeof(mascara[0]));
+
+	blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, n_mask, threadPerBlockx, threadPerBlocky);
+   	image_out.save("output_blur_GPU.ppm");
+
+	printf("%d", sqrt( sizeof(mascara) / sizeof(mascara[0])));
 
     return 0;
 }
