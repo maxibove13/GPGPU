@@ -5,7 +5,7 @@ using namespace cimg_library;
 
 void transpose_cpu	(float * image_in, int width, int height, float * image_out);
 void transpose_gpu	(float * image_in, int width, int height, float * image_out, int threadPerBlockx, int threadPerBlocky);
-void blur_gpu(float * image_in, int width, int height, float * image_out, float * mask, int m_size, int threadPerBlockx, int threadPerBlocky);
+// void blur_gpu(float * image_in, int width, int height, float * image_out, float * mask, int m_size, int threadPerBlockx, int threadPerBlocky);
 int main(int argc, char** argv){
 
 	const char * path;
@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 		exit(1);
 	} 
 	else
-		path = argv[argc-3];
+		path = argv[argc-4];
 
 	int threadPerBlockx = atoi(argv[2]);
 	int threadPerBlocky = atoi(argv[3]);
