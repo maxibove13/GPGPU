@@ -1,0 +1,2 @@
+==129176== NVPROF is profiling process 129176, command: /home/max/Documents/FING/GPGPU/practico-4/transpose ./img/lena.pgm 32 32
+==129176== Generated result file: /home/max/Documents/FING/GPGPU/practico-4/.metadata/.plugins/com.nvidia.viper/launch/2/api_129176.log0

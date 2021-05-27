@@ -6,7 +6,6 @@ all: clean
 	-dlcm=cg \
 	\
 	main.cpp \
-	blur.cu \
 	bright.cu \
 	\
 	-o main \

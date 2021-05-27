@@ -61,7 +61,7 @@ __global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, in
         d_img_out[threadId_trans] = tile[threadId_tile_col];
 }
 
-__global__ void transpose_kernel_sharedMem_noBankConflicts(float* d_img_in, float* d_img_out, int width, int height) {
+__global__ void transpose_kernel_sharedMem_noBankConflicts(float* d_img_in, float* d_img_out, int width, int height, int tile_size_x, int tile_size_y) {
 
     extern __shared__ float tile_b[31][34]; //Defino el arrray tile_b en shared memory  
 
@@ -91,39 +91,6 @@ __global__ void transpose_kernel_sharedMem_noBankConflicts(float* d_img_in, floa
     if (threadId_trans <= width * height)
         d_img_out[threadId_trans] = tile_b[threadIdx.y][threadIdx.x];
 }
-
-
-// ENTRAR CON UN INDICE +3 CORRIDO. (SI THREAD 0 VA AL 0)
-// __global__ void transpose_kernel_sharedMem_fixedConflict(float* d_input, float* d_output, int width, int height){
-//     __shared__ float tile[threadPerBlock]; //Defino el arrray tile en shared memory  
-//     //PASO 1: Leo variables en la imagen original y copio al tile de forma coalseced
-//     int original_pixel_x, original_pixel_y,threadId_original,threadId_tile_row;
-    
-//     original_pixel_x = blockIdx.x  * blockDim.x + threadIdx.x;
-//     original_pixel_y = blockIdx.y  * blockDim.y + threadIdx.y;
-//     int posicion = threadIdx.x + threadIdx.y;
-//     int bl_pixel_y = 0;
-//     int bl_pixel_x = 0;
-//     if ( posicion < Bl_size ){
-//       bl_pixel_x = threadIdx.x + threadIdx.y*blockDim.x + threadIdx.y;
-//     }else{
-//       bl_pixel_x = threadIdx.x + (threadIdx.y-1)*blockDim.x + threadIdx.y;
-//     }
-//     tile[bl_pixel_x]= *(d_input + in_pixel_x + in_pixel_y*width );
-//     __syncthreads();
-//     // Segundo paso
-//     if( posicion < Bl_size){
-//       bl_pixel_y = threadIdx.y + threadIdx.x*(blockDim.x +1);
-//     }else{
-//       bl_pixel_y = threadIdx.y + (threadIdx.x-1)*(blockDim.x +1) +1;
-//     }
-//      // Tercer paso
-//      int out_pixel_x = threadIdx.x + blockIdx.y*blockDim.y;
-//      int out_pixel_y = threadIdx.y + blockIdx.x*blockDim.x;
-//     *(d_output + out_pixel_x + out_pixel_y*height ) = tile[bl_pixel_y];
-//   }
-
-
 
 void transpose_gpu(float * img_in, int width, int height, float * img_out, int threadPerBlockx, int threadPerBlocky) {
 
@@ -174,7 +141,7 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
 	CUDA_CHK(cudaDeviceSynchronize());
 
     // Ejecuto kernel utilizando shared mem, especificando además del grid and bloc size el shared mem size, y evitando los conflictos de bancos:
-    transpose_kernel_sharedMem_noBankConflicts <<< grid, block >>> (d_img_in, d_img_out, width, height);
+    transpose_kernel_sharedMem_noBankConflicts <<< grid, block, tile_size_b >>> (d_img_in, d_img_out, width, height, (threadPerBlockx - 1), (threadPerBlocky + 2));
 
     // Obtengo los posibles errores en la llamada al kernel
 	CUDA_CHK(cudaGetLastError());

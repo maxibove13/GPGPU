@@ -1,0 +1,3 @@
+==128736== NVPROF is profiling process 128736, command: /home/max/Documents/FING/GPGPU/practico-4/transpose ./img/lena.pgm 32 32
+==128736== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==128736== Generated result file: /home/max/Documents/FING/GPGPU/practico-4/.metadata/.plugins/com.nvidia.viper/launch/1/api_128736.log0
