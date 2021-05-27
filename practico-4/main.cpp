@@ -3,9 +3,11 @@
 
 using namespace cimg_library;
 
-void transpose_cpu	(float * image_in, int width, int height, float * image_out);
-void transpose_gpu	(float * image_in, int width, int height, float * image_out, int threadPerBlockx, int threadPerBlocky);
+void transpose_cpu (float * image_in, int width, int height, float * image_out);
+void transpose_gpu (float * image_in, int width, int height, float * image_out, int threadPerBlockx, int threadPerBlocky);
+void blur_cpu (float * image_in, int width, int height, float * image_out, float * mask, int m_size);
 void blur_gpu (float * image_in, int width, int height, float * image_out, float * mask, int m_size, int threadPerBlockx, int threadPerBlocky);
+
 
 int main(int argc, char** argv) {
 
@@ -40,19 +42,21 @@ int main(int argc, char** argv) {
 						6,24,36,24, 6,
 						4,16,24,16, 4,
 						1, 4, 6, 4, 1};
-
-	// transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
-	// image_out.save("output_transpose_cpu.ppm");
-	
-	// transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
-	// image_out.save("output_transpose_gpu.ppm");
-
 	n_mask =  sqrt( sizeof(mascara) / sizeof(mascara[0]));
+
+	// Transpose - Ejercicio 1
+	transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
+	image_out.save("output_transpose_cpu.ppm");
+	
+	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
+	image_out.save("output_transpose_gpu.ppm");
+
+	// Blur - Ejercicio 2
+	blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, n_mask);
+	image_out.save("output_blur_CPU.ppm");
 
 	blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, n_mask, threadPerBlockx, threadPerBlocky);
    	image_out.save("output_blur_GPU.ppm");
-
-	printf("%d", sqrt( sizeof(mascara) / sizeof(mascara[0])));
 
     return 0;
 }

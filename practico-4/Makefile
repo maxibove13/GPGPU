@@ -9,6 +9,7 @@ all: clean
 	transpose_cpu.cpp \
 	transpose_gpu.cu \
 	blur_gpu.cu \
+	blur_cpu.cpp \
 	\
 	-o main \
 	\
