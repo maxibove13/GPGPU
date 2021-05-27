@@ -10,7 +10,7 @@ all: clean
 	transpose_gpu.cu \
 	blur_gpu.cu \
 	\
-	-o transpose \
+	-o main \
 	\
 	-O3 \
 	-L/usr/X11R6/lib \
