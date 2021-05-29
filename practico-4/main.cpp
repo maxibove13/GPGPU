@@ -24,10 +24,12 @@ int main(int argc, char** argv) {
 	int threadPerBlockx = atoi(argv[2]);
 	int threadPerBlocky = atoi(argv[3]);
 	CImg<float> image(path);
-	CImg<float> image_out(image.height(), image.width(),1,1,0);
+	CImg<float> image_out(image.width(), image.height(),1,1,0);
+	CImg<float> image_out_t(image.height(), image.width(),1,1,0);
 
 	float *img_matrix = image.data();
     float *img_out_matrix = image_out.data();
+    float *img_out_matrix_t = image_out_t.data();
 
 	float elapsed = 0;
 
@@ -45,18 +47,18 @@ int main(int argc, char** argv) {
 	n_mask =  sqrt( sizeof(mascara) / sizeof(mascara[0]));
 
 	// Transpose - Ejercicio 1
-	transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix);
-	image_out.save("output_transpose_cpu.ppm");
+	transpose_cpu(img_matrix, image.width(), image.height(), img_out_matrix_t);
+	image_out_t.save("output_transpose_cpu.ppm");
 	
-	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix, threadPerBlockx, threadPerBlocky);
-	image_out.save("output_transpose_gpu.ppm");
+	transpose_gpu(img_matrix, image.width(), image.height(), img_out_matrix_t, threadPerBlockx, threadPerBlocky);
+	image_out_t.save("output_transpose_gpu.ppm");
 
 	// Blur - Ejercicio 2
 	blur_cpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, n_mask);
 	image_out.save("output_blur_CPU.ppm");
 
 	blur_gpu(img_matrix, image.width(), image.height(), img_out_matrix, mascara, n_mask, threadPerBlockx, threadPerBlocky);
-   	image_out.save("output_blur_GPU.ppm");
+	image_out.save("output_blur_GPU.ppm");
 
     return 0;
 }
