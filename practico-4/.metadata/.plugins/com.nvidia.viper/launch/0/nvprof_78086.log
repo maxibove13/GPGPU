@@ -1,0 +1,2 @@
+==78086== NVPROF is profiling process 78086, command: /home/max/Documents/FING/GPGPU/practico-4/main ./img/fing1.pgm 32 32
+==78086== Generated result file: /home/max/Documents/FING/GPGPU/practico-4/.metadata/.plugins/com.nvidia.viper/launch/0/api_78086.log

@@ -86,8 +86,8 @@ void blur_gpu(float * image_in, int width, int height, float * image_out,  float
     float t_elap_get_cpyHtoD = t_elap_get;
 
     // configurar grilla y lanzar kernel
-    dim3 grid(nbx,nby)  ;
-    dim3 block(threadPerBlockx,threadPerBlocky) ;
+    dim3 grid(nbx,nby);
+    dim3 block(threadPerBlockx,threadPerBlocky);
 
     CLK_POSIX_START;
     CLK_CUEVTS_START;

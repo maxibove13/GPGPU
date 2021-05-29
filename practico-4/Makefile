@@ -3,7 +3,9 @@ all: clean
 	\
 	-arch=sm_50 \
 	-Xptxas \
-	-dlcm=cg \
+	-dlcm=ca \
+	-g \
+	-G \
 	\
 	main.cpp \
 	transpose_cpu.cpp \
