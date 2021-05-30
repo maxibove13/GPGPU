@@ -3,10 +3,16 @@ test
 test.c
 
 # Binary executables
-transpose
-main
+**/transpose
+**/decrypt
+**/main
 
 # images
 *.ppm
+
+# Internal directories
+**/.vscode
+**/RemoteSystemsTempFiles
+**/.metadata
 
 *.out
