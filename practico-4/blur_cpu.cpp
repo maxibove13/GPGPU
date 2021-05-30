@@ -9,8 +9,8 @@ void blur_cpu(float * img_in, int width, int height, float * img_out, float msk[
     
     CLK_POSIX_START;
     //para cada pixel aplicamos el filtro
-    printf("0,0 pixel friends CPU:\n");
-    printf("img_in[65]: %f \n", img_in[65]);
+    // printf("0,0 pixel friends CPU:\n");
+    // printf("img_in[65]: %f \n", img_in[65]);
     for(int imgx=0; imgx < width ; imgx++){
         for(int imgy=0; imgy < height; imgy++){
 
@@ -26,8 +26,8 @@ void blur_cpu(float * img_in, int width, int height, float * img_out, float msk[
                     if(ix >= 0 && ix < width && iy>= 0 && iy < height ) {
                         val_pixel = val_pixel +  img_in[iy * width +ix] * msk[i*m_size+j];
 
-                        if (imgx == 0 && imgy == 255)
-                            printf("%03.0f | %05d | %d | %d | %02.0f | %05.0f \n", img_in[iy * width +ix], iy * width +ix, i, j, msk[i*m_size+j], val_pixel);
+                    //     if (imgx == 0 && imgy == 255)
+                    //         printf("%03.0f | %05d | %d | %d | %02.0f | %05.0f \n", img_in[iy * width +ix], iy * width +ix, i, j, msk[i*m_size+j], val_pixel);
                     }
 
                     }
@@ -40,7 +40,7 @@ void blur_cpu(float * img_in, int width, int height, float * img_out, float msk[
     CLK_POSIX_ELAPSED;
 
 
-    printf("img_out[256]_cpu: %f\n", img_out[256]);
+    // printf("img_out[256]_cpu: %f\n", img_out[256]);
 
     float t_elap = t_elap_get;
 }

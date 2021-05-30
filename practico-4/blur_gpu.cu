@@ -330,6 +330,7 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
     int nby;//Número de blques Y
     unsigned int size_img = width * height * sizeof(float);
     unsigned int size_msk = m_size * m_size * sizeof(int);
+    int shared_memSize, num_sm, const_memSize;
     
     width % threadPerBlockx == 0 ? nbx = width / threadPerBlockx : nbx = width / threadPerBlockx + 1;
     height % threadPerBlocky == 0 ? nby = height / threadPerBlocky : nby = height / threadPerBlocky + 1;
@@ -381,6 +382,18 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
     cudaFree(d_img_out); 
     cudaFree(d_mask);
 
+    cudaDeviceGetAttribute(&shared_memSize, cudaDevAttrMaxSharedMemoryPerBlock, 0);
+    cudaDeviceGetAttribute(&num_sm, cudaDevAttrMultiProcessorCount, 0);
+    cudaDeviceGetAttribute(&const_memSize, cudaDevAttrTotalConstantMemory, 0);
+
+
+    printf("shared_memSize: %dB\n", shared_memSize);
+    printf("num_sm: %d\n", num_sm);
+    printf("const_memSize: %dB\n", const_memSize);
+
+
+    // Destroy CUDA context (which means all device allocations are removed)
+    cudaDeviceReset();
 }
 
 

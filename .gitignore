@@ -6,4 +6,7 @@ test.c
 transpose
 main
 
+# images
+*.ppm
+
 *.out
