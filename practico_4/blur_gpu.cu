@@ -74,13 +74,16 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       int tid_tile_2  = tid_tile + blockDim.x;
       int tid_moved_2 = tid_moved + blockDim.x; 
 
-      // Me aseguro de estar dentro del tile:
-      if (tid_moved_2 < width * height) {
-        // Los threads en x mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia la derecha)
-        if (threadIdx.x < m_size - 1) {
-          // Me aseguro de no sobreescribir. (Se escribió en paso 1 hasta blockDim.x - 1 en la dirección x)
-          if (tid_tile_2 > blockDim.x)
-              tile[tid_tile_2] = d_input[tid_moved_2];
+      // Me aseguro de estar dentro de la imagen:
+      if (tid_moved_2 >= 0 && tid_moved_2 < width * height) {
+        // Me aseguro de estar dentro del tile:
+        if (tid_tile_2 < width_tile * width_tile) {
+          // Los threads en x mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia la derecha)
+          if (threadIdx.x < m_size - 1) {
+            // Me aseguro de no sobreescribir. (Se escribió en paso 1 hasta blockDim.x - 1 en la dirección x)
+            if (tid_tile_2 > blockDim.x)
+                tile[tid_tile_2] = d_input[tid_moved_2];
+          }
         }
       }
 
@@ -90,14 +93,17 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       // Redefino tid_tile y tid_moved trasladándolas blockDim.y hacia abajo:
       int tid_tile_3  = tid_tile + blockDim.y * width_tile;
       int tid_moved_3 = tid_moved + blockDim.y * width; 
-
-      // Me aseguro de estar dentro del tile:
-      if (tid_tile_3 < width_tile * width_tile) {
-        // Los threads en y mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia abajo)
-        if (threadIdx.y < m_size - 1) {
-          // // Me aseguro de no sobreescribir. (Se escribió en paso 1 y 2 hasta width tile * blockDim.y)
-          // if (tid_tile_3 > width_tile * (blockDim.y))
-            tile[tid_tile_3] = d_input[tid_moved_3];
+      
+      // Me aseguro de estar dentro de la imagen:
+      if (tid_moved_3 >= 0 && tid_moved_3 < width * height) {
+        // Me aseguro de estar dentro del tile:
+        if (tid_tile_3 < width_tile * width_tile) {
+          // Los threads en y mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia abajo)
+          if (threadIdx.y < m_size - 1) {
+            // // Me aseguro de no sobreescribir. (Se escribió en paso 1 y 2 hasta width tile * blockDim.y)
+            // if (tid_tile_3 > width_tile * (blockDim.y))
+              tile[tid_tile_3] = d_input[tid_moved_3];
+          }
         }
       }
 
@@ -108,11 +114,14 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       int tid_tile_4  = tid_tile + blockDim.x + blockDim.y * width_tile;
       int tid_moved_4 = tid_moved + blockDim.x + blockDim.y * width; 
 
-      // Me aseguro de estar dentro del tile:
-      if (tid_tile_4 < width_tile * width_tile) {
-        // Los threads en x e y mayores a (m_size - 1) quedan ociosos (porque están fuera del tile dado que corrí el bloque hacia abajo y hacia la derecha)
-        if (threadIdx.x < m_size - 1 && threadIdx.y < m_size - 1)
-            tile[tid_tile_4] = d_input[tid_moved_4];
+      // Me aseguro de estar dentro de la imagen:
+      if (tid_moved_4 >= 0 && tid_moved_4 < width * height) {
+        // Me aseguro de estar dentro del tile:
+        if (tid_tile_4 < width_tile * width_tile) {
+          // Los threads en x e y mayores a (m_size - 1) quedan ociosos (porque están fuera del tile dado que corrí el bloque hacia abajo y hacia la derecha)
+          if (threadIdx.x < m_size - 1 && threadIdx.y < m_size - 1)
+              tile[tid_tile_4] = d_input[tid_moved_4];
+        }
       }
 
 
@@ -139,7 +148,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
           int read_threadId = read_tile_x + m_size/2 + width_tile * (read_tile_y + m_size/2);
   
           // Me aseguro de que los vecinos estén en la imagen. (Los pixel en los bordes tendrían vecinos fuera de la imagen)
-          if(read_threadId >= 0 && tid_x + i - m_size/2 >= 0 && tid_y + j - m_size/2 >= 0) {
+          if(read_threadId >= 0 && tid_x + i - m_size/2 >= 0 && tid_y + j - m_size/2 >= 0 && read_threadId < width_tile * width_tile) {
             // Sumo ponderadamente el valor de los vecinos guardado en el tile por el valor de la máscara.
             val_pixel +=  tile[read_threadId] * d_msk[i*m_size + j];
           }
@@ -185,12 +194,12 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
           int threadId_tile= tile_pixel_x + tile_pixel_y * blockDim.x;
 
           // Me aseguro que el vecino esté dentro de la imagen.
-          if( tid_x + i - m_size/2 >= 0 && tid_y + j -m_size/2 >= 0 && threadId_mask >= 0) {
+          if(tid_x + i - m_size/2 >= 0 && tid_y + j -m_size/2 >= 0 && threadId_mask >= 0) {
             // Si este vecino está dentro del bloque:
-            if(tile_pixel_x < blockDim.x && tile_pixel_y < blockDim.y && threadId_tile >= 0) {
+            if(tile_pixel_x < blockDim.x && tile_pixel_y < blockDim.y && threadId_tile >= 0 && threadId_tile < THREAD_PER_BLOCK*THREAD_PER_BLOCK) {
               val_pixel += tile[threadId_tile] * d_msk[i*m_size+j];
             // Sino, voy a buscar a memoria global el valor del pixel vecino
-            } else {
+            } else if (threadId_mask < width * height) {
               val_pixel += d_input[threadId_mask] * d_msk[i*m_size + j];
             }
           }
@@ -215,7 +224,7 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
       
 
       // Defino el tile: (el array guardado en shared mem)
-      __shared__ float tile[THREAD_PER_BLOCK * THREAD_PER_BLOCK];
+      __shared__ float tile[(THREAD_PER_BLOCK + MASK_SIZE - 1) * (THREAD_PER_BLOCK + MASK_SIZE - 1)];
   
       // PARTE 1 - ESCRITURA AL TILE DE TODOS LOS PIXELS Y SUS VECINOS DE ESTE BLOQUE //
 
@@ -230,7 +239,7 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
       int tid_moved = (tid_moved_y) * width + (tid_moved_x) ;
       
 
-      //PASO 1, Todos los threads de este bloque escribe en el tile
+     //PASO 1, Todos los threads de este bloque escribe en el tile
       if (tid_moved >= 0 ) {
         tile[tid_tile] = d_input[tid_moved];
       }
@@ -242,13 +251,16 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
       int tid_tile_2  = tid_tile + blockDim.x;
       int tid_moved_2 = tid_moved + blockDim.x; 
 
-      // Me aseguro de estar dentro del tile:
-      if (tid_moved_2 < width * height) {
-        // Los threads en x mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia la derecha)
-        if (threadIdx.x < m_size - 1) {
-          // Me aseguro de no sobreescribir. (Se escribió en paso 1 hasta blockDim.x - 1 en la dirección x)
-          if (tid_tile_2 > blockDim.x)
-              tile[tid_tile_2] = d_input[tid_moved_2];
+      // Me aseguro de estar dentro de la imagen:
+      if (tid_moved_2 >= 0 && tid_moved_2 < width * height) {
+        // Me aseguro de estar dentro del tile:
+        if (tid_tile_2 < width_tile * width_tile) {
+          // Los threads en x mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia la derecha)
+          if (threadIdx.x < m_size - 1) {
+            // Me aseguro de no sobreescribir. (Se escribió en paso 1 hasta blockDim.x - 1 en la dirección x)
+            if (tid_tile_2 > blockDim.x)
+                tile[tid_tile_2] = d_input[tid_moved_2];
+          }
         }
       }
 
@@ -258,14 +270,17 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
       // Redefino tid_tile y tid_moved trasladándolas blockDim.y hacia abajo:
       int tid_tile_3  = tid_tile + blockDim.y * width_tile;
       int tid_moved_3 = tid_moved + blockDim.y * width; 
-
-      // Me aseguro de estar dentro del tile:
-      if (tid_tile_3 < width_tile * width_tile) {
-        // Los threads en y mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia abajo)
-        if (threadIdx.y < m_size - 1) {
-          // // Me aseguro de no sobreescribir. (Se escribió en paso 1 y 2 hasta width tile * blockDim.y)
-          // if (tid_tile_3 > width_tile * (blockDim.y))
-            tile[tid_tile_3] = d_input[tid_moved_3];
+      
+      // Me aseguro de estar dentro de la imagen:
+      if (tid_moved_3 >= 0 && tid_moved_3 < width * height) {
+        // Me aseguro de estar dentro del tile:
+        if (tid_tile_3 < width_tile * width_tile) {
+          // Los threads en y mayores a m_size - 1 quedan ociosos (porque estos están fuera del tile dado que corrí el bloque hacia abajo)
+          if (threadIdx.y < m_size - 1) {
+            // // Me aseguro de no sobreescribir. (Se escribió en paso 1 y 2 hasta width tile * blockDim.y)
+            // if (tid_tile_3 > width_tile * (blockDim.y))
+              tile[tid_tile_3] = d_input[tid_moved_3];
+          }
         }
       }
 
@@ -276,11 +291,14 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
       int tid_tile_4  = tid_tile + blockDim.x + blockDim.y * width_tile;
       int tid_moved_4 = tid_moved + blockDim.x + blockDim.y * width; 
 
-      // Me aseguro de estar dentro del tile:
-      if (tid_tile_4 < width_tile * width_tile) {
-        // Los threads en x e y mayores a (m_size - 1) quedan ociosos (porque están fuera del tile dado que corrí el bloque hacia abajo y hacia la derecha)
-        if (threadIdx.x < m_size - 1 && threadIdx.y < m_size - 1)
-            tile[tid_tile_4] = d_input[tid_moved_4];
+      // Me aseguro de estar dentro de la imagen:
+      if (tid_moved_4 >= 0 && tid_moved_4 < width * height) {
+        // Me aseguro de estar dentro del tile:
+        if (tid_tile_4 < width_tile * width_tile) {
+          // Los threads en x e y mayores a (m_size - 1) quedan ociosos (porque están fuera del tile dado que corrí el bloque hacia abajo y hacia la derecha)
+          if (threadIdx.x < m_size - 1 && threadIdx.y < m_size - 1)
+              tile[tid_tile_4] = d_input[tid_moved_4];
+        }
       }
 
 
@@ -307,7 +325,7 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
           int read_threadId = read_tile_x + m_size/2 + width_tile * (read_tile_y + m_size/2);
   
           // Me aseguro de que los vecinos estén en la imagen. (Los pixel en los bordes tendrían vecinos fuera de la imagen)
-          if(read_threadId >= 0 && tid_x + i - m_size/2 >= 0 && tid_y + j - m_size/2 >= 0) {
+          if(read_threadId >= 0 && tid_x + i - m_size/2 >= 0 && tid_y + j - m_size/2 >= 0 && read_threadId < width_tile * width_tile) {
             // Sumo ponderadamente el valor de los vecinos guardado en el tile por el valor de la máscara.
             val_pixel +=  tile[read_threadId] * tile_mask[i*m_size + j];
           }
@@ -352,13 +370,13 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
     dim3 block(threadPerBlockx,threadPerBlocky);
 
     // Utilizando exclusivamente global mem
-    // blur_kernel_gl <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_kernel_gl <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
     
     // Utilizando shared memory (tile) del tamaño de (blockDim.x + m_size - 1) * (blockDim.x + m_size - 1). Es decir, todos los pixels vecinos están en el tile.
-    // blur_kernel_ai <<< grid, block, size_tile >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_kernel_ai <<< grid, block, size_tile >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
     
     // Utilizando combinación de global y shared mem. El tile tiene tamaño blockDim.x * blockDim.x, los vecinos que quedan afuera del tile se leen de la global mem. Se espera que el cache L1 ayude.
-    // blur_kernel_aii <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_kernel_aii <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
 
     // Adapto blur_kernel_ai para almacenar la máscara en shared mem.
     blur_kernel_bi <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
@@ -392,8 +410,8 @@ __global__ void blur_kernel_aii(float* d_input, int width, int height, float* d_
     printf("const_memSize: %dB\n", const_memSize);
 
 
-    // Destroy CUDA context (which means all device allocations are removed)
-    cudaDeviceReset();
+    // // Destroy CUDA context (which means all device allocations are removed)
+    // cudaDeviceReset();
 }
 
 

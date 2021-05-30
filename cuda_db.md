@@ -19,7 +19,7 @@ If only one device is present you have to enable a certain environmental variabl
 
 Then execute your program with `cuda-gdb` at the beggining:
 
-```cuda-gdb ./my__cuda_program```
+```cuda-gdb ./my_cuda_program```
 
 If your program has arguments pass it to `cuda-gdb`:
 
@@ -65,3 +65,12 @@ You can also change the focus to a specific coordinate especifying the coordinat
 ## Exit
 
 To exit `cuda-gdb` just type `q`
+
+
+# CUDA mem-check
+
+CUDA mem-check is another CUDA utility that checks if your application has any memory errors.
+
+To test your application with mem-check, just execute it with `mem-check` at the beggining:
+
+```mem-check ./my_cuda_program arg1 arg2```
