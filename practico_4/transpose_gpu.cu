@@ -16,7 +16,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 using namespace std;
 
-__global__ void transpose_kernel_gobalMem(float* d_img_in, float* d_img_out, int width, int height) {
+__global__ void transpose_kernel_global(float* d_img_in, float* d_img_out, int width, int height) {
     
     int pixel_x, pixel_y,threadId_original,threadId_trans; //Declaro variables
     pixel_x = blockIdx.x * blockDim.x + threadIdx.x; //Indices imgx análogo a el CPU transpose
@@ -30,7 +30,7 @@ __global__ void transpose_kernel_gobalMem(float* d_img_in, float* d_img_out, int
         d_img_out[threadId_trans] = d_img_in[threadId_original];
 }
 
-__global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, int width, int height) {
+__global__ void transpose_kernel_shared(float* d_img_in, float* d_img_out, int width, int height) {
 
     extern __shared__ float tile[]; //Defino el arrray tile en shared memory  
     
@@ -61,7 +61,7 @@ __global__ void transpose_kernel_sharedMem(float* d_img_in, float* d_img_out, in
         d_img_out[threadId_trans] = tile[threadId_tile_col];
 }
 
-__global__ void transpose_kernel_sharedMem_noBankConflicts(float* d_img_in, float* d_img_out, int width, int height) {
+__global__ void transpose_kernel_shared_noBankConflicts(float* d_img_in, float* d_img_out, int width, int height) {
 
     __shared__ float tile_b[33][34]; //Defino el arrray tile_b en shared memory  
 
@@ -123,11 +123,11 @@ void transpose_gpu(float * img_in, int width, int height, float * img_out, int t
     tile_size = threadPerBlockx * threadPerBlocky * sizeof(float);
 
     // Utilizando global mem
-    transpose_kernel_gobalMem <<< grid, block >>> (d_img_in, d_img_out, width, height);
+    transpose_kernel_global <<< grid, block >>> (d_img_in, d_img_out, width, height);
     // Utilizando shared memory para transponer de a pequeños bloques
-    transpose_kernel_sharedMem <<< grid, block, tile_size >>> (d_img_in, d_img_out, width, height);
+    transpose_kernel_shared <<< grid, block, tile_size >>> (d_img_in, d_img_out, width, height);
     // Utilizando shared memory e intentando solucionar conflictos de bancos (el tamaño del tile que no sea múlitplo del tamaño del bloque)
-    transpose_kernel_sharedMem_noBankConflicts <<< grid, block >>> (d_img_in, d_img_out, width, height);
+    transpose_kernel_shared_noBankConflicts <<< grid, block >>> (d_img_in, d_img_out, width, height);
 
     // Obtengo los posibles errores en la llamada al kernel
 	CUDA_CHK(cudaGetLastError());

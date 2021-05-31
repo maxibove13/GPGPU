@@ -2,10 +2,6 @@ all: clean
 	nvcc \
 	\
 	-arch=sm_50 \
-	-Xptxas \
-	-dlcm=ca \
-	-g \
-	-G \
 	\
 	main.cpp \
 	transpose_cpu.cpp \
