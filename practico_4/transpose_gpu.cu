@@ -26,7 +26,7 @@ __global__ void transpose_kernel_global(float* d_img_in, float* d_img_out, int w
 
     threadId_trans = (pixel_x*height+pixel_y);//Indice de acceso a la transpuesta
     
-    if (threadId_original <= width * height)
+    if (threadId_original < width * height && threadId_trans < width * height)
         d_img_out[threadId_trans] = d_img_in[threadId_original];
 }
 
@@ -57,7 +57,7 @@ __global__ void transpose_kernel_shared(float* d_img_in, float* d_img_out, int w
     transpose_pixel_y = blockIdx.x * blockDim.x + threadIdx.y ;
     threadId_trans    = transpose_pixel_x + transpose_pixel_y * height ;
     
-    if (threadId_trans <= width * height)
+    if (threadId_trans < width * height)
         d_img_out[threadId_trans] = tile[threadId_tile_col];
 }
 
@@ -89,7 +89,7 @@ __global__ void transpose_kernel_shared_noBankConflicts(float* d_img_in, float* 
     transpose_pixel_y = blockIdx.x * blockDim.x + threadIdx.y ;
     threadId_trans    = transpose_pixel_x + transpose_pixel_y * height ;
     
-    if (threadId_trans <= width * height)
+    if (threadId_trans < width * height)
         d_img_out[threadId_trans] = tile_b[threadIdx.y][threadIdx.x];
 }
 
