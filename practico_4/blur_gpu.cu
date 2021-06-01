@@ -21,29 +21,27 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
   
   using namespace std;
 
-  __global__ void blur_gl(float* d_input, int width, int height, float* d_output, float * d_msk,   int m_size){
+  __global__ void blur_gl(float* d_input, int width, int height, float* d_output, float * d_msk,   int m_size) {
 
-    int threadIdPixel, blockId;
-    int neighbourPixel;
+    int neighbourPixel, tid_x, tid_y, tid;
     float val_pixel = 0;
 
-    // blockId         = (gridDim.x * blockIdx.y) + blockIdx.x;
-    // threadIdPixel   = (blockId * (blockDim.x * blockDim.y)) + (threadIdx.y * blockDim.x) + threadIdx.x;
+    tid_x = blockIdx.x * blockDim.x + threadIdx.x;
+    tid_y = blockIdx.y * blockDim.y + threadIdx.y;
+    tid = tid_x + tid_y * width;
 
-    int tid_x = blockIdx.x * blockDim.x + threadIdx.x;
-    int tid_y = blockIdx.y * blockDim.y + threadIdx.y;
-    int tid = tid_x + tid_y * width;
+    for (int i = 0; i < m_size ; i++) {
+        for (int j = 0; j < m_size ; j++) {
 
-    for (int i = 0; i < m_size ; i++){
-        for (int j = 0; j < m_size ; j++){
-            neighbourPixel =tid + (j- m_size/2) +(i-m_size/2)*width ;                 
-            if(neighbourPixel >= 0 && neighbourPixel < width * height ){
+            neighbourPixel =tid + ( j- m_size/2) + (i - m_size/2) * width;
+
+            if(neighbourPixel >= 0 && neighbourPixel < width * height ) {
                 val_pixel = val_pixel +  d_input[neighbourPixel] * d_msk[i*m_size+j];
             }
         }
     }
-    if (threadIdPixel < width * height )
-        d_output[threadIdPixel] = val_pixel;
+    if (tid < width * height )
+        d_output[tid] = val_pixel;
 }
 
   __global__ void blur_a_i(float* d_input, int width, int height, float* d_output, float * d_msk, int m_size){
@@ -64,7 +62,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       int tid_moved = (tid_moved_y) * width + (tid_moved_x) ;
       
 
-      //PASO 1, Todos los threads de este bloque escribe en el tile
+      //PASO 1, Todos los threads de este bloque escriben en el tile
       if (tid_moved >= 0 && tid_moved_x >= 0 && tid_moved_y >= 0) {
         tile[tid_tile] = d_input[tid_moved];
       }
@@ -755,22 +753,22 @@ __global__ void blur_a_ii(float* d_input, int width, int height, float* d_output
     blur_gl <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
     
     // Utilizando shared memory (tile) del tamaño de (blockDim.x + m_size - 1) * (blockDim.x + m_size - 1). Es decir, todos los pixels vecinos están en el tile.
-    // blur_a_i <<< grid, block, size_tile_a_i >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_a_i <<< grid, block, size_tile_a_i >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
     
     // Utilizando combinación de global y shared mem. El tile tiene tamaño blockDim.x * blockDim.x, los vecinos que quedan afuera del tile se leen de la global mem. Se espera que el cache L1 ayude.
-    // blur_a_ii <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_a_ii <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
 
     // Adapto blur_a_i para almacenarz la máscara en shared mem alocándola estáticamente.
-    // blur_b_i <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_b_i <<< grid, block >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
 
     // Adapto blur_a_i para almacenar la máscara en shared mem alocándola dinámicamente.
-    // blur_b_ii <<< grid, block, size_tile_b_ii >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_b_ii <<< grid, block, size_tile_b_ii >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
 
     // Adapto blur_a_i agregándola const __restrict__ al parámetro del kernel correspondiente a la máscara
-    // blur_b_iii <<< grid, block, size_tile_a_i >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
+    blur_b_iii <<< grid, block, size_tile_a_i >>> (d_img_in, width, height, d_img_out, d_mask, m_size);
     
     // Adapto blur_a_i copiando la máscara como memoria constante (no preciso pasarla como parámetro al kernel)
-    // blur_b_iv <<< grid, block, size_tile_a_i >>> (d_img_in, width, height, d_img_out, m_size);
+    blur_b_iv <<< grid, block, size_tile_a_i >>> (d_img_in, width, height, d_img_out, m_size);
 
 
     // Obtengo los posibles errores en la llamada al kernel

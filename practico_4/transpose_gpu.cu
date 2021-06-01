@@ -63,7 +63,7 @@ __global__ void transpose_kernel_shared(float* d_img_in, float* d_img_out, int w
 
 __global__ void transpose_kernel_shared_noBankConflicts(float* d_img_in, float* d_img_out, int width, int height) {
 
-    __shared__ float tile_b[33][34]; //Defino el arrray tile_b en shared memory  
+    __shared__ float tile_b[34][33]; //Defino el arrray tile_b en shared memory  
 
     //PASO 1: Leo variables en la imagen original por filas y copio al tile_b de forma coalseced por filas
     int original_pixel_x, original_pixel_y,threadId_original;

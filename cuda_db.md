@@ -61,6 +61,15 @@ You can also change the focus to a specific coordinate especifying the coordinat
 
 ```info cuda threads```
 
+## Print variables
+
+In order to print the value of a certain variable just type:
+
+```p my_var```
+
+If your variable is an array, just type the position you want to print:
+
+```p my_array[1]```
 
 ## Exit
 
