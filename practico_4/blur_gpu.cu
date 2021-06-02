@@ -72,7 +72,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
       // Redefino tid_tile y tid_moved trasladándolas blockDim.x a la derechaÑ
       int tid_tile_2  = tid_tile + blockDim.x;
-      int tid_moved_2 = tid_moved + blockDim.x; 
+      int tid_moved_2 = tid_moved + blockDim.x;
 
       // Me aseguro de estar dentro de la imagen:
       if (tid_moved_2 >= 0 && tid_moved_2 < width * height && tid_moved_y >= 0) {
