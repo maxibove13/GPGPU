@@ -23,20 +23,22 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
   __global__ void blur_gl(float* d_input, int width, int height, float* d_output, float * d_msk,   int m_size) {
 
-    int neighbourPixel, tid_x, tid_y, tid;
-    float val_pixel = 0;
-
+    int tid_x, tid_y, tid;
     tid_x = blockIdx.x * blockDim.x + threadIdx.x;
     tid_y = blockIdx.y * blockDim.y + threadIdx.y;
     tid = tid_x + tid_y * width;
+    
+    float val_pixel = 0;
+    int neighbourPixel,mask_pixel_x, mask_pixel_y, threadId_mask;
 
     for (int i = 0; i < m_size ; i++) {
         for (int j = 0; j < m_size ; j++) {
-
-            neighbourPixel =tid + ( j- m_size/2) + (i - m_size/2) * width;
-
-            if(neighbourPixel >= 0 && neighbourPixel < width * height ) {
-                val_pixel = val_pixel +  d_input[neighbourPixel] * d_msk[i*m_size+j];
+          mask_pixel_x    = tid_x + j - m_size/2;
+          mask_pixel_y    = tid_y + i - m_size/2;
+          neighbourPixel  = mask_pixel_x + mask_pixel_y * width;
+          threadId_mask   = i*m_size+j;
+            if(mask_pixel_x >=0 && mask_pixel_y >=0 && mask_pixel_x <width && mask_pixel_y <height) {
+                val_pixel = val_pixel +  d_input[neighbourPixel] * d_msk[threadId_mask];
             }
         }
     }
@@ -194,11 +196,12 @@ __global__ void blur_a_ii(float* d_input, int width, int height, float* d_output
           tile_pixel_y = threadIdx.y + i - m_size/2;
           threadId_tile= tile_pixel_x + tile_pixel_y * blockDim.x;
 
+          
           // Me aseguro que el vecino esté dentro de la imagen.
-          if(tid_x + j - m_size/2 >= 0 && tid_y + i -m_size/2 >= 0 && threadId_mask >= 0) {
+          if(mask_pixel_x >=0 && mask_pixel_y >=0 && mask_pixel_x <width && mask_pixel_y <height) {
             // Si este vecino está dentro del bloque:
-            if(tile_pixel_x < blockDim.x && tile_pixel_y < blockDim.y && threadId_tile >= 0 && threadId_tile < THREAD_PER_BLOCK*THREAD_PER_BLOCK) {
-              val_pixel += tile[threadId_tile] * d_msk[i*m_size+j];
+            if(tile_pixel_x >= 0 && tile_pixel_x < blockDim.x && tile_pixel_y >= 0 && tile_pixel_y < blockDim.y ) {
+            val_pixel += tile[threadId_tile] * d_msk[i*m_size+j];
             // Sino, voy a buscar a memoria global el valor del pixel vecino
             } else if (threadId_mask < width * height) {
               val_pixel += d_input[threadId_mask] * d_msk[i*m_size + j];
