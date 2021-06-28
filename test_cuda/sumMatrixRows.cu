@@ -3,6 +3,24 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#define DEV 0
+
+#define DGS_Check_Call( Statement , MsgString )                   \
+                                                                  \
+    {                                                             \
+        printf ( "Checking CUDA Call... \n") ;                    \
+      const cudaError_t error = Statement;                        \
+      if (error != cudaSuccess)                                   \
+      {                                                           \
+        printf( "Error checking CUDA Call... \n")      ;            \
+        printf( "Error: %s:%d, ", __FILE__, __LINE__)  ;          \
+        printf( "code: %d, reason: %s\n", error, cudaGetErrorString(error));   \
+        printf( "Call Checked with error, stopping...\n");       \
+        exit(1);                                                  \
+      }                                                           \
+        printf ( "Call Checked OK, region... \n");                \
+    }
+
 // Kernel declaration
 __global__ void sumMatrixRowsKernel(int N, double * M_d, double * sum_d);
 __host__ void sumMatrixRows(int M, int N, double * M_h, double * sum_h);
@@ -45,6 +63,10 @@ int main(int argc, char * argv[]) {
 }
 
 void sumMatrixRows(int M, int N, double * M_h, double * sum_h) {
+
+    // Set up device
+    // cudaSetDevice(DEV);
+    DGS_Check_Call(cudaSetDevice(DEV), "cudaSetDevice");      // dev - device identifier
 
     // Declare the size of the matrix and the size of the sum array
     int size_matrix = M * N * sizeof(double), size_sum = M * sizeof(double);

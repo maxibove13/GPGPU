@@ -16,3 +16,4 @@ test.c
 **/.metadata
 
 *.out
+*.zip
